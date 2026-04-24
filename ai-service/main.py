@@ -6,6 +6,8 @@ from insights_network.passing_network import build_passing_network
 from insights_network.schemas import PassingNetworkResponse
 from insights_player_profile.player_profile import build_player_profile
 from insights_player_profile.schemas import PlayerProfileResponse
+from insights_pressing.pressing import build_pressing
+from insights_pressing.schemas import PressingResponse
 
 app = FastAPI(title="U-Hack AI Service")
 
@@ -88,4 +90,33 @@ def player_profile(
         "team": result["team"],
         "grid": result["grid"],
         "stats": result["stats"],
+    }
+
+
+@app.get("/insights/pressing/{match_id}", response_model=PressingResponse)
+def pressing(
+    match_id: int,
+    team_id: int = Query(..., description="Team ID to analyse pressing for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+):
+    element = load_match()
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    team_info = (element.get("teams") or {}).get(str(team_id))
+    if not team_info:
+        raise HTTPException(404, f"team {team_id} not in match")
+
+    result = build_pressing(
+        events=element["events"],
+        team_id=team_id,
+        period=period,
+    )
+
+    return {
+        "match_id": match_id,
+        "team_id": team_id,
+        "period": period,
+        **result,
     }
