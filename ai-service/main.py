@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loader import load_match
 from insights_network.passing_network import build_passing_network
 from insights_network.schemas import PassingNetworkResponse
+from insights_player_profile.player_profile import build_player_profile
+from insights_player_profile.schemas import PlayerProfileResponse
 
 app = FastAPI(title="U-Hack AI Service")
 
@@ -53,4 +55,37 @@ def passing_network(
         "cutoff_minute": result["cutoff_minute"],
         "nodes": result["nodes"],
         "edges": result["edges"],
+    }
+
+
+@app.get("/insights/player-profile/{match_id}", response_model=PlayerProfileResponse)
+def player_profile(
+    match_id: int,
+    player_id: int = Query(..., description="Player ID to build the heatmap for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+    grid_cols: int = Query(12, ge=2, le=40),
+    grid_rows: int = Query(8, ge=2, le=30),
+):
+    element = load_match()
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    result = build_player_profile(
+        events=element["events"],
+        player_id=player_id,
+        period=period,
+        grid_cols=grid_cols,
+        grid_rows=grid_rows,
+    )
+    if result is None:
+        raise HTTPException(404, f"player {player_id} not found in match events")
+
+    return {
+        "match_id": match_id,
+        "period": period,
+        "player": result["player"],
+        "team": result["team"],
+        "grid": result["grid"],
+        "stats": result["stats"],
     }
