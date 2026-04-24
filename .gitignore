@@ -208,3 +208,11 @@ __marimo__/
 
 # Match data — club files, not for version control
 Platform/src/main/resources/matches/
+
+# macOS
+.DS_Store
+
+# Local data / mock fixtures
+mock_data/
+*.jsonl
+
