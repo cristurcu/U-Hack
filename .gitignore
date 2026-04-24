@@ -216,3 +216,5 @@ Platform/src/main/resources/matches/
 mock_data/
 *.jsonl
 
+# Match data — club files, not for version control
+ai-service/mock_data/
