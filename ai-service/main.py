@@ -118,13 +118,7 @@ def pressing(
         team_id=team_id,
         period=period,
     )
-
-    return {
-        "match_id": match_id,
-        "team_id": team_id,
-        "period": period,
-        **result,
-    }
+    return {"match_id": match_id, "team_id": team_id, "period": period, **result}
 
 
 @app.get("/insights/ball-losses/{match_id}", response_model=BallLossesResponse)
