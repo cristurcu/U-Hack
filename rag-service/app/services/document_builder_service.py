@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from app.builders.attacking_patterns_builder import AttackingPatternsDocumentBuilder
+from app.builders.ball_losses_builder import BallLossesDocumentBuilder
 from app.builders.decision_quality_builder import DecisionQualityDocumentBuilder
 from app.builders.fusion_builder import FusionDocumentBuilder
+from app.builders.line_breaks_builder import LineBreaksDocumentBuilder
 from app.builders.passing_network_builder import PassingNetworkDocumentBuilder
 from app.builders.player_profile_builder import PlayerProfileDocumentBuilder
 from app.builders.pressing_builder import PressingDocumentBuilder
@@ -21,6 +24,9 @@ class DocumentBuilderService:
         self._profile = PlayerProfileDocumentBuilder()
         self._pressing = PressingDocumentBuilder()
         self._passing = PassingNetworkDocumentBuilder()
+        self._line_breaks = LineBreaksDocumentBuilder()
+        self._ball_losses = BallLossesDocumentBuilder()
+        self._attacking_patterns = AttackingPatternsDocumentBuilder()
         self._max_player_documents = max_player_documents
 
     def build_documents(self, request: IndexMatchRequest) -> tuple[list[RagDocument], list[str]]:
@@ -107,6 +113,45 @@ class DocumentBuilderService:
             warnings.extend(built_warnings)
         else:
             warnings.append("passingNetwork output missing.")
+
+        line_breaks = outputs.lineBreaks or outputs.line_breaks
+        if line_breaks:
+            built_docs, built_warnings = self._line_breaks.build(
+                match_id=request.matchId,
+                team_id=request.teamId,
+                team_name=request.teamName,
+                payload=line_breaks,
+            )
+            documents.extend(built_docs)
+            warnings.extend(built_warnings)
+        else:
+            warnings.append("lineBreaks output missing.")
+
+        ball_losses = outputs.ballLosses or outputs.ball_losses
+        if ball_losses:
+            built_docs, built_warnings = self._ball_losses.build(
+                match_id=request.matchId,
+                team_id=request.teamId,
+                team_name=request.teamName,
+                payload=ball_losses,
+            )
+            documents.extend(built_docs)
+            warnings.extend(built_warnings)
+        else:
+            warnings.append("ballLosses output missing.")
+
+        attacking_patterns = outputs.attackingPatterns or outputs.attacking_patterns
+        if attacking_patterns:
+            built_docs, built_warnings = self._attacking_patterns.build(
+                match_id=request.matchId,
+                team_id=request.teamId,
+                team_name=request.teamName,
+                payload=attacking_patterns,
+            )
+            documents.extend(built_docs)
+            warnings.extend(built_warnings)
+        else:
+            warnings.append("attackingPatterns output missing.")
 
         deduped_documents = self._deduplicate_doc_ids(documents)
         return deduped_documents, warnings

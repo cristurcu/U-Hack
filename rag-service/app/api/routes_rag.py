@@ -39,6 +39,13 @@ def rag_list_matches(
     return service.list_matches()
 
 
+@router.get("/rag/clubs")
+def rag_list_clubs(
+    service: QueryService = Depends(get_query_service),
+) -> list[dict]:
+    return service.list_club_collections()
+
+
 @router.get("/rag/matches/{match_id}/sources", response_model=list[RetrievedDocument])
 def rag_list_sources(
     match_id: int,
@@ -46,6 +53,15 @@ def rag_list_sources(
     service: QueryService = Depends(get_query_service),
 ) -> list[RetrievedDocument]:
     return service.list_sources(match_id=match_id, limit=limit)
+
+
+@router.get("/rag/clubs/{club_key}/sources", response_model=list[RetrievedDocument])
+def rag_list_club_sources(
+    club_key: str,
+    limit: int = Query(default=100, ge=1, le=500),
+    service: QueryService = Depends(get_query_service),
+) -> list[RetrievedDocument]:
+    return service.list_club_sources(club_key=club_key, limit=limit)
 
 
 @router.get("/rag/sessions/{session_id}/history", response_model=list[ChatHistoryMessage])

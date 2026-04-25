@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from app.core.config import get_settings
 from app.services.chat_history_service import ChatHistoryService
+from app.services.club_knowledge_service import ClubKnowledgeService
 from app.services.context_service import ContextService
 from app.services.document_builder_service import DocumentBuilderService
 from app.services.embedding_service import EmbeddingService
@@ -24,10 +25,12 @@ def get_embedding_service() -> EmbeddingService:
 def get_indexing_service() -> IndexingService:
     settings = get_settings()
     document_builder = DocumentBuilderService(max_player_documents=settings.max_player_documents)
+    club_knowledge_service = ClubKnowledgeService()
     embedding_service = get_embedding_service()
     vector_store_service = VectorStoreService(settings)
     return IndexingService(
         document_builder=document_builder,
+        club_knowledge_service=club_knowledge_service,
         embedding_service=embedding_service,
         vector_store=vector_store_service,
     )

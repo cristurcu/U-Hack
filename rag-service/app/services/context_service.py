@@ -67,7 +67,7 @@ class ContextService:
         if len(text) > 360:
             text = text[:360].rstrip() + "..."
         return (
-            f"[docId={doc.docId} | type={doc.documentType} | score={doc.score:.4f}]\n"
+            f"[docId={doc.docId} | scope={doc.sourceScope} | type={doc.documentType} | score={doc.score:.4f}]\n"
             f"title: {safe_text(doc.title, 'n/a')}\n"
             f"category: {safe_text(doc.category, 'n/a')}\n"
             f"players: {players_text}\n"
