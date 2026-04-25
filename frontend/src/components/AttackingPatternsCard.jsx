@@ -5,9 +5,9 @@ export default function AttackingPatternsCard({ data = null, dark = true }) {
 
   const flank = data?.flankBreakdown || { left: 0, center: 0, right: 0 };
   const flankData = [
-    { name: "Stânga", value: flank.left },
-    { name: "Centru", value: flank.center },
-    { name: "Dreapta", value: flank.right },
+    { name: "Left", value: flank.left },
+    { name: "Center", value: flank.center },
+    { name: "Right", value: flank.right },
   ];
 
   const dominant = data?.mostDangerousFlank || "—";
@@ -17,15 +17,15 @@ export default function AttackingPatternsCard({ data = null, dark = true }) {
   return (
     <div style={{ padding: 20, background: dark ? "rgba(20,20,20,0.6)" : "#fff", border, backdropFilter: "blur(6px)", height: "100%", boxSizing: "border-box" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div className="label" style={{ opacity: 0.6 }}>Tipare de atac · Live</div>
+        <div className="label" style={{ opacity: 0.6 }}>Attacking Patterns · Live</div>
         <span className="chip-mono" style={{ color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)" }}>
           {totalAttacks} attacks
         </span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-        <StatMini label="Flanc dominant" value={dominant} dark={dark} />
-        <StatMini label="xG mediu/Atac" value={avgXg.toFixed(3)} dark={dark} />
+        <StatMini label="Dominant Flank" value={dominant} dark={dark} />
+        <StatMini label="Avg xG/Attack" value={avgXg.toFixed(3)} dark={dark} />
       </div>
 
       <div style={{ height: 100 }}>

@@ -3,20 +3,20 @@ import { fetchChat } from "../lib/api";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 
 const SUGGESTED = [
-  "Care au fost cele mai mari probleme defensive?",
-  "Care jucător a avut cea mai bună eficiență la pressing?",
-  "De ce am pierdut ritmul în repriza a doua?",
-  "Ce schimbări tactice trebuie să facem la meciul următor?",
-  "Explică momentele cheie care au decis meciul.",
+  "What were our biggest defensive issues?",
+  "Which player had the best pressing efficiency?",
+  "Why did we lose momentum in the second half?",
+  "What tactical changes should we make next match?",
+  "Explain the key moments that decided the match.",
 ];
 
 const MOCK_ANSWERS = {
   default: [
-    "Pe baza datelor din meci, eficiența pressingului a scăzut semnificativ după minutul 60, în special în zonele de mijloc central. Metricile de intensitate ale lui Bic arată tipare clare de oboseală începând din minutul 63.",
-    "Analiza rețelei de pase relevă o conectivitate puternică între Nistor și Popa (16 schimburi), dar acoperire slabă pe flancul drept — Gheorghe a fost izolat cu doar 6 schimburi cu atacantul.",
-    "U Cluj a dominat posesia în prima repriză cu 55% intensitate pressing, dar Hermannstadt a exploatat spațiul lăsat în spatele alergărilor suprapuse ale lui Chipciu în repriza a doua.",
-    "Datele privind calitatea deciziilor arată 3 oportunități de șut ratate de Popa (xG combinat 0.91). Decizii mai rapide de șut în careu ar fi putut schimba rezultatul.",
-    "Analiza line-breaking îl identifică pe Stoica ca cel mai periculos alergător — 10 din alergările sale au dus direct la șuturi pe poartă, cu o medie de 34m per alergare progresivă.",
+    "Based on the match data, the pressing efficiency dropped significantly after the 60th minute, particularly in the central midfield zones. Bic's intensity metrics show clear fatigue patterns starting at minute 63.",
+    "The passing network analysis reveals strong connectivity between Nistor and Popa (16 exchanges), but weak coverage on the right flank — Gheorghe was isolated with only 6 exchanges with the striker.",
+    "U Cluj dominated possession in the first half with 55% pressing intensity, but Hermannstadt exploited the space left behind Chipciu's overlapping runs in the second half.",
+    "Decision quality data shows 3 high-value shooting opportunities missed by Popa (combined xG 0.91). Earlier shot decisions in the box could have changed the result.",
+    "The line-breaking analysis identifies Stoica as the most dangerous runner — 10 of his runs led directly to shots on target, with an average of 34m per progressive run.",
   ],
 };
 
@@ -26,7 +26,7 @@ export default function CoachChat({ matchId, match }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: `Pregătit să analizez **${match?.home || "U Cluj"} ${match?.score || ""} ${match?.away || ""}** (${match?.date || ""}). Întreabă-mă orice despre tactică, performanța jucătorilor sau momente cheie.`,
+      text: `Ready to analyze **${match?.home || "U Cluj"} ${match?.score || ""} ${match?.away || ""}** (${match?.date || ""}). Ask me anything about tactics, player performance, or key moments.`,
     },
   ]);
   const [input, setInput]   = useState("");
@@ -63,7 +63,7 @@ export default function CoachChat({ matchId, match }) {
       {/* Header */}
       <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: 8 }}>
         <Sparkles size={14} color="var(--uc-red)" />
-        <span className="label" style={{ fontWeight: 700, fontSize: 12 }}>Asistent AI Antrenor</span>
+        <span className="label" style={{ fontWeight: 700, fontSize: 12 }}>AI Coach Assistant</span>
         <span className="font-mono" style={{ fontSize: 10, opacity: 0.4, marginLeft: "auto" }}>
           {match?.home} {match?.score} {match?.away} · {match?.date}
         </span>
@@ -85,7 +85,7 @@ export default function CoachChat({ matchId, match }) {
               {msg.text}
             </div>
             <span style={{ fontSize: 10, opacity: 0.35, marginTop: 3, fontFamily: "JetBrains Mono, monospace" }}>
-              {msg.role === "user" ? "Antrenor" : "Analist AI"}
+              {msg.role === "user" ? "Coach" : "AI Analyst"}
             </span>
           </div>
         ))}
@@ -93,7 +93,7 @@ export default function CoachChat({ matchId, match }) {
         {loading && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.5, fontSize: 12 }}>
             <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />
-            <span style={{ fontFamily: "JetBrains Mono, monospace" }}>Se analizează datele meciului…</span>
+            <span style={{ fontFamily: "JetBrains Mono, monospace" }}>Analyzing match data…</span>
           </div>
         )}
         <div ref={bottomRef} />
@@ -132,7 +132,7 @@ export default function CoachChat({ matchId, match }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Întreabă despre tactică, jucători, momente cheie…"
+          placeholder="Ask about tactics, players, key moments…"
           style={{
             flex: 1,
             padding: "10px 14px",

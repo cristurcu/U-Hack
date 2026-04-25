@@ -29,7 +29,7 @@ export default function LiveMode({ state }) {
             animation: "pulse-red 1.6s infinite",
           }}
         />
-        Conectare la transmisia live…
+        Connecting to live match feed…
       </div>
     );
   }
@@ -40,28 +40,28 @@ export default function LiveMode({ state }) {
   const pitchCards = {
     passing: {
       legend: [
-        { color: "#ffffff", label: "Linie de pasă", opacity: 0.6 },
-        { color: "#E30613", label: "Portar" },
-        { color: "#ffffff", label: "Jucător de câmp" },
+        { color: "#ffffff", label: "Passing lane", opacity: 0.6 },
+        { color: "#E30613", label: "Goalkeeper" },
+        { color: "#ffffff", label: "Outfield player" },
       ],
-      note: "Grosimea liniei = numărul de pase între jucători. Mai groasă = conexiune mai puternică.",
+      note: "Line thickness = number of passes between players. Thicker = stronger connection.",
       component: (h) => <PassingNetwork dark pollMs={4000} pitchH={h} />,
     },
     linebreaking: {
       legend: [
-        { color: "#22c55e", label: "A dus la șut" },
-        { color: "#f59e0b", label: "În careu" },
-        { color: "rgba(255,255,255,0.6)", label: "Treime finală" },
+        { color: "#22c55e", label: "Led to shot" },
+        { color: "#f59e0b", label: "Into box" },
+        { color: "rgba(255,255,255,0.6)", label: "Final third" },
       ],
-      note: "Săgețile arată alergările progresive care au spart linia defensivă a adversarului.",
+      note: "Arrows show progressive runs that broke the opponent's defensive line.",
       component: (h) => <LineBreakingCard data={state.line_breaking} dark pitchH={h} />,
     },
     heatmap: {
       legend: [
-        { color: "#E30613", label: "Zonă activitate ridicată", opacity: 0.9 },
-        { color: "#E30613", label: "Activitate medie", opacity: 0.45 },
+        { color: "#E30613", label: "High activity zone", opacity: 0.9 },
+        { color: "#E30613", label: "Medium activity", opacity: 0.45 },
       ],
-      note: "Heatmap-ul arată unde a fost cel mai activ jucătorul selectat în timpul meciului.",
+      note: "Heatmap shows where the selected player was most active during the match.",
       component: (h) => <PlayerHeatmapLive dark pollMs={5000} pitchH={h} />,
     },
   };
@@ -92,7 +92,7 @@ export default function LiveMode({ state }) {
             {pitchCards[expanded].component("560px")}
             <PitchLegend items={pitchCards[expanded].legend} note={pitchCards[expanded].note} />
             <div style={{ textAlign: "center", marginTop: 10, fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-              click în afară pentru a închide
+              click outside to close
             </div>
           </div>
         </div>
@@ -185,7 +185,7 @@ function BallLossesCard({ data = null, dark = true }) {
   return (
     <div style={{ padding: 20, background: dark ? "rgba(20,20,20,0.6)" : "#fff", border, backdropFilter: "blur(6px)", height: "100%", boxSizing: "border-box" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div className="label" style={{ opacity: 0.6 }}>Pierderi minge · Live</div>
+        <div className="label" style={{ opacity: 0.6 }}>Ball Losses · Live</div>
         <span className="chip-mono" style={{ color: total > 15 ? "var(--uc-red)" : "rgba(255,255,255,0.5)" }}>
           {total} total
         </span>
@@ -195,14 +195,14 @@ function BallLossesCard({ data = null, dark = true }) {
         <div className="font-display" style={{ fontWeight: 900, fontSize: 64, lineHeight: 1, color: pct > 40 ? "var(--uc-red)" : "#f59e0b" }}>
           {pct}<span style={{ fontSize: 24, opacity: 0.5 }}>%</span>
         </div>
-        <div className="label" style={{ opacity: 0.5, marginTop: 4 }}>Rată pierderi periculoase</div>
+        <div className="label" style={{ opacity: 0.5, marginTop: 4 }}>Dangerous Loss Rate</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {[
-          { label: "Total pierderi", value: total, color: "rgba(255,255,255,0.7)" },
-          { label: "Periculoase", value: dangerous, color: "var(--uc-red)" },
-          { label: "În propria jumătate", value: ownHalf, color: "#f59e0b" },
+          { label: "Total Losses", value: total, color: "rgba(255,255,255,0.7)" },
+          { label: "Dangerous", value: dangerous, color: "var(--uc-red)" },
+          { label: "In Own Half", value: ownHalf, color: "#f59e0b" },
         ].map((m) => (
           <div key={m.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span className="label" style={{ opacity: 0.5, fontSize: 9 }}>{m.label}</span>
