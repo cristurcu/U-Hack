@@ -1,8 +1,6 @@
 package UHack.Platform.controller;
 
-import UHack.Platform.domain.LiveInsight;
 import UHack.Platform.service.InsightService;
-import UHack.Platform.service.MatchService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,8 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Read-only API for live insights. Frontend polls this; values are populated
- * by LiveInsightConsumer reading off the {@code insights-*} Kafka topics.
+ * Read-only API for live insights, served from Redis (no Postgres on the
+ * hot path).
  */
 @RestController
 @RequestMapping("/api/matches/{wyId}/insights")
@@ -20,15 +18,13 @@ import java.util.Map;
 public class InsightController {
 
     private final InsightService insights;
-    private final MatchService matches;
 
-    public InsightController(InsightService insights, MatchService matches) {
+    public InsightController(InsightService insights) {
         this.insights = insights;
-        this.matches = matches;
     }
 
     /**
-     * All current live insights for one match, grouped by type then by team:
+     * All current live insights for a match, grouped by type then team:
      * {
      *   "pressing":        { "9001": {payload}, "9010": {payload} },
      *   "passing-network": { "9001": {payload}, "9010": {payload} },
@@ -37,52 +33,44 @@ public class InsightController {
      */
     @GetMapping
     public ResponseEntity<Map<String, Map<String, Object>>> all(@PathVariable Long wyId) {
-        return matches.findByWyId(wyId)
-                .map(m -> {
-                    Map<String, Map<String, Object>> out = new HashMap<>();
-                    for (LiveInsight row : insights.listForMatch(m.getId())) {
-                        out
-                                .computeIfAbsent(toWireType(row.getType()), k -> new HashMap<>())
-                                .put(String.valueOf(row.getTeamId()), Map.of(
-                                        "computedAt", row.getComputedAt().toString(),
-                                        "payload", row.getPayload()
-                                ));
-                    }
-                    return ResponseEntity.ok(out);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Map<String, Map<String, Object>> out = new HashMap<>();
+        for (InsightService.Snapshot snap : insights.listForMatch(wyId)) {
+            out
+                    .computeIfAbsent(toWireType(snap.type()), k -> new HashMap<>())
+                    .put(String.valueOf(snap.teamId()), Map.of(
+                            "computedAt", snap.computedAt().toString(),
+                            "payload", snap.payload()
+                    ));
+        }
+        return ResponseEntity.ok(out);
     }
 
-    /**
-     * Insight for a specific team. Required:
-     *   GET /api/matches/{wyId}/insights/{type}?team_id=9001
-     */
+    /** Insight for a specific team: GET /api/matches/{wyId}/insights/{type}?team_id=9001 */
     @GetMapping("/{type}")
     public ResponseEntity<JsonNode> one(
             @PathVariable Long wyId,
             @PathVariable String type,
             @RequestParam("team_id") Long teamId
     ) {
-        LiveInsight.Type t = parseType(type);
+        InsightService.Type t = parseType(type);
         if (t == null) return ResponseEntity.badRequest().build();
-        return matches.findByWyId(wyId)
-                .flatMap(m -> insights.get(m.getId(), t, teamId))
-                .map(row -> ResponseEntity.ok(row.getPayload()))
+        return insights.get(wyId, t, teamId)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    private LiveInsight.Type parseType(String wire) {
+    private InsightService.Type parseType(String wire) {
         return switch (wire) {
-            case "passing-network" -> LiveInsight.Type.PASSING_NETWORK;
-            case "pressing"        -> LiveInsight.Type.PRESSING;
-            case "ball-losses"     -> LiveInsight.Type.BALL_LOSSES;
-            case "line-breaks"     -> LiveInsight.Type.LINE_BREAKS;
-            case "player-profile"  -> LiveInsight.Type.PLAYER_PROFILE;
+            case "passing-network" -> InsightService.Type.PASSING_NETWORK;
+            case "pressing"        -> InsightService.Type.PRESSING;
+            case "ball-losses"     -> InsightService.Type.BALL_LOSSES;
+            case "line-breaks"     -> InsightService.Type.LINE_BREAKS;
+            case "player-profile"  -> InsightService.Type.PLAYER_PROFILE;
             default -> null;
         };
     }
 
-    private String toWireType(LiveInsight.Type t) {
+    private String toWireType(InsightService.Type t) {
         return switch (t) {
             case PASSING_NETWORK -> "passing-network";
             case PRESSING        -> "pressing";

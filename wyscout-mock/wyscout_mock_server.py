@@ -297,6 +297,13 @@ def make_handler(match_meta, events_sorted, state: SimState, full_meta=None):
             elif cutoff <= 0:
                 status = "scheduled"
 
+            # `finished` flips true once the replay has drained every event
+            # AND the simulated clock has crossed full-time. Platform reads
+            # this flag and emits the match_end sentinel onto Kafka.
+            finished = (cutoff >= 90 * 60) or (
+                len(filtered) == len(events_sorted) and cutoff > 0
+            )
+
             payload = {
                 "match": {
                     **match_meta,
@@ -306,6 +313,11 @@ def make_handler(match_meta, events_sorted, state: SimState, full_meta=None):
                     "simulatedPeriod": period,
                 },
                 "events": filtered,
+                "meta": {
+                    "finished": finished,
+                    "totalEventsKnown": len(events_sorted),
+                    "eventsDelivered": len(filtered),
+                },
             }
             self._json(200, payload)
 

@@ -27,14 +27,40 @@ public class WyscoutClient {
     }
 
     public List<JsonNode> fetchEvents() {
+        return fetch().events;
+    }
+
+    /**
+     * Fetches the full mock response so callers can look at meta.finished
+     * (used by Platform's polling service to decide when to emit the
+     * match_end sentinel).
+     */
+    public PollResult fetch() {
         JsonNode body = restTemplate.getForObject(apiUrl, JsonNode.class);
         if (body == null) {
-            return Collections.emptyList();
+            return new PollResult(Collections.emptyList(), false, null);
         }
         JsonNode events = body.isArray() ? body : body.path("events");
-        if (!events.isArray()) {
-            return Collections.emptyList();
+        List<JsonNode> list = events.isArray()
+                ? StreamSupport.stream(events.spliterator(), false).toList()
+                : Collections.emptyList();
+
+        boolean finished = body.path("meta").path("finished").asBoolean(false);
+        Long matchId = null;
+        JsonNode m = body.path("match");
+        if (m.has("wyId")) {
+            matchId = m.get("wyId").asLong();
+        } else {
+            // Fall back to first event's matchId
+            for (JsonNode e : list) {
+                if (e.has("matchId") && !e.get("matchId").isNull()) {
+                    matchId = e.get("matchId").asLong();
+                    break;
+                }
+            }
         }
-        return StreamSupport.stream(events.spliterator(), false).toList();
+        return new PollResult(list, finished, matchId);
     }
+
+    public record PollResult(List<JsonNode> events, boolean finished, Long matchId) {}
 }

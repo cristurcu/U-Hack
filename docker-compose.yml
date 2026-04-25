@@ -95,6 +95,7 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       IN_TOPIC: wyscout-events
       OUT_TOPIC: event-scores
+      OUT_TOPIC_ANALYSIS: analysis-decision-quality
       GROUP_ID: ai-decision-quality
     ports:
       - "8002:8002"
@@ -102,6 +103,12 @@ services:
   ai-tactical-intelligence:
     build: ./ai-tactical-intelligence
     container_name: uhack-ai-tactical
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      OUT_TOPIC_ANALYSIS: analysis-tactical-intelligence
     volumes:
       - ./ai-tactical-intelligence/outputs:/app/outputs
     ports:

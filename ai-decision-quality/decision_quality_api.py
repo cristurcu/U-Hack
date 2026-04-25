@@ -648,6 +648,16 @@ def build_match_response(request: AnalyzeMatchRequest) -> Dict[str, Any]:
     response["summary"]["missedShotOrGoalOpportunities"] = int(
         len(response["phases"]["missedShotOrGoalOpportunities"])
     )
+
+    # Fire-and-forget publish to Kafka analysis-decision-quality so Platform
+    # picks it up. Disabled when KAFKA_BOOTSTRAP isn't set (offline dev).
+    try:
+        from analysis_publisher import publish as _publish_kafka
+        match_id = (response.get("match") or {}).get("matchId") or request.match_id
+        _publish_kafka(match_id, response)
+    except Exception:  # never break the HTTP response over Kafka issues
+        pass
+
     return response
 
 

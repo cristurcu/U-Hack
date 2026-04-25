@@ -32,9 +32,20 @@ class MatchInsightsRequest(BaseModel):
     )
 
 
+def _publish_kafka(payload: MatchRequestPayload, report: dict[str, Any]) -> None:
+    """Fire-and-forget publish to analysis-tactical-intelligence. No-op without KAFKA_BOOTSTRAP."""
+    try:
+        from tactical_baseline.analysis_publisher import publish
+        publish(payload.match_id, report)
+    except Exception:
+        pass
+
+
 def _build_live_report_or_http_error(payload: MatchRequestPayload) -> dict[str, Any]:
     try:
-        return service.build_live_match_report(payload)
+        report = service.build_live_match_report(payload)
+        _publish_kafka(payload, report)
+        return report
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - API safety net
@@ -48,11 +59,13 @@ def _build_compact_report_or_http_error(
     top_strengths: int,
 ) -> dict[str, Any]:
     try:
-        return service.build_live_match_report_compact(
+        report = service.build_live_match_report_compact(
             payload,
             top_insights=top_insights,
             top_strengths=top_strengths,
         )
+        _publish_kafka(payload, report)
+        return report
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - API safety net
@@ -61,7 +74,9 @@ def _build_compact_report_or_http_error(
 
 def _build_detailed_report_or_http_error(payload: MatchRequestPayload) -> dict[str, Any]:
     try:
-        return service.build_live_match_report_detailed(payload)
+        report = service.build_live_match_report_detailed(payload)
+        _publish_kafka(payload, report)
+        return report
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - API safety net
