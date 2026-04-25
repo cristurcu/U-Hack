@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Shield } from "lucide-react";
+import { Activity, BarChart3, Users } from "lucide-react";
 
 export default function MatchHeader({ state, mode, setMode }) {
   const isDark = mode === "live";
@@ -24,18 +24,16 @@ export default function MatchHeader({ state, mode, setMode }) {
       >
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
+          <img
+            src="/logo.png"
+            alt="FC Universitatea Cluj"
             style={{
-              width: 40,
-              height: 40,
-              background: "var(--uc-red)",
-              display: "grid",
-              placeItems: "center",
-              color: "white",
+              width: 52,
+              height: 52,
+              objectFit: "contain",
+              mixBlendMode: isDark ? "screen" : "normal",
             }}
-          >
-            <Shield size={22} />
-          </div>
+          />
           <div>
             <div className="font-display" style={{ fontWeight: 900, fontSize: 22, textTransform: "uppercase" }}>
               {home}
@@ -129,6 +127,28 @@ export default function MatchHeader({ state, mode, setMode }) {
             }}
           >
             <BarChart3 size={13} /> Analysis
+          </button>
+          <button
+            onClick={() => setMode("squad")}
+            style={{
+              padding: "8px 20px",
+              fontFamily: "Barlow Condensed, sans-serif",
+              fontWeight: 700,
+              fontSize: 13,
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+              border: "none",
+              borderLeft: border,
+              background: mode === "squad" ? "#0a0a0a" : "transparent",
+              color: mode === "squad" ? "white" : isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+              transition: "all 0.2s",
+            }}
+          >
+            <Users size={13} /> Squad
           </button>
         </div>
       </div>
