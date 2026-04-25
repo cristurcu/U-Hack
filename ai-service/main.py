@@ -12,6 +12,10 @@ from insights_ball_losses.ball_losses import build_ball_losses
 from insights_ball_losses.schemas import BallLossesResponse
 from insights_line_breaks.line_breaks import build_line_breaks
 from insights_line_breaks.schemas import LineBreaksResponse
+from insights_line_breaking_runs.line_breaking_runs import build_line_breaking_runs
+from insights_line_breaking_runs.schemas import LineBreakingResponse
+from insights_attacking_patterns.attacking_patterns import build_attacking_patterns
+from insights_attacking_patterns.schemas import AttackingPatternsResponse
 
 app = FastAPI(title="U-Hack AI Service")
 
@@ -100,30 +104,21 @@ def player_profile(
 @app.get("/insights/pressing/{match_id}", response_model=PressingResponse)
 def pressing(
     match_id: int,
-    team_id: int = Query(..., description="Team ID to analyse pressing for"),
+    team_id: int = Query(..., description="Team ID to analyze"),
     period: str = Query("full", pattern="^(full|1H|2H)$"),
 ):
     element = load_match()
-
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
-
     team_info = (element.get("teams") or {}).get(str(team_id))
     if not team_info:
         raise HTTPException(404, f"team {team_id} not in match")
-
     result = build_pressing(
         events=element["events"],
         team_id=team_id,
         period=period,
     )
-
-    return {
-        "match_id": match_id,
-        "team_id": team_id,
-        "period": period,
-        **result,
-    }
+    return {"match_id": match_id, "team_id": team_id, "period": period, **result}
 
 
 @app.get("/insights/ball-losses/{match_id}", response_model=BallLossesResponse)
@@ -132,7 +127,7 @@ def ball_losses(
     team_id: int = Query(..., description="Team ID to analyse ball losses for"),
     period: str = Query("full", pattern="^(full|1H|2H)$"),
 ):
-    element = load_match(match_id=match_id)
+    element = load_match()
 
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
@@ -161,7 +156,7 @@ def line_breaks(
     team_id: int = Query(..., description="Team ID to analyse line-breaking passes for"),
     period: str = Query("full", pattern="^(full|1H|2H)$"),
 ):
-    element = load_match(match_id=match_id)
+    element = load_match()
 
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
@@ -179,6 +174,64 @@ def line_breaks(
     return {
         "match_id": match_id,
         "team": {"id": team_id, "name": team_info["name"]},
+        "period": period,
+        **result,
+    }
+
+
+@app.get("/insights/line-breaking-runs/{match_id}", response_model=LineBreakingResponse)
+def line_breaking_runs(
+    match_id: int,
+    team_id: int = Query(..., description="Team ID to analyse line-breaking runs for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+):
+    element = load_match()
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    team_info = (element.get("teams") or {}).get(str(team_id))
+    if not team_info:
+        raise HTTPException(404, f"team {team_id} not in match")
+
+    result = build_line_breaking_runs(
+        events=element["events"],
+        team_id=team_id,
+        period=period,
+    )
+
+    return {
+        "match_id": match_id,
+        "team_id": team_id,
+        "period": period,
+        **result,
+    }
+
+
+@app.get("/insights/attacking-patterns/{match_id}", response_model=AttackingPatternsResponse)
+def attacking_patterns(
+    match_id: int,
+    team_id: int = Query(..., description="Team ID to analyse attacking patterns for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+):
+    element = load_match()
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    team_info = (element.get("teams") or {}).get(str(team_id))
+    if not team_info:
+        raise HTTPException(404, f"team {team_id} not in match")
+
+    result = build_attacking_patterns(
+        events=element["events"],
+        team_id=team_id,
+        period=period,
+    )
+
+    return {
+        "match_id": match_id,
+        "team_id": team_id,
         "period": period,
         **result,
     }
