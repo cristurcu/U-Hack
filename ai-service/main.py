@@ -32,7 +32,7 @@ def passing_network(
     until_first_sub: bool = True,
     min_passes: int = Query(2, ge=1),
 ):
-    element = load_match()
+    element = load_match(match_id=match_id)
 
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
@@ -68,7 +68,7 @@ def player_profile(
     grid_cols: int = Query(12, ge=2, le=40),
     grid_rows: int = Query(8, ge=2, le=30),
 ):
-    element = load_match()
+    element = load_match(match_id=match_id)
 
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
@@ -99,7 +99,7 @@ def pressing(
     team_id: int = Query(..., description="Team ID to analyse pressing for"),
     period: str = Query("full", pattern="^(full|1H|2H)$"),
 ):
-    element = load_match()
+    element = load_match(match_id=match_id)
 
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")

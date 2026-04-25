@@ -28,6 +28,7 @@ def load_match(path: Path):
     events_raw = elements["events"]
     match_raw = elements.get("match", {})
     teams_raw = elements.get("teams", {})
+    subs_raw = elements.get("substitutions") or elements.get("subs") or []
 
     home_id = match_raw.get("teamsData", {}).get("home", {}).get("teamId")
     away_id = match_raw.get("teamsData", {}).get("away", {}).get("teamId")
@@ -60,7 +61,16 @@ def load_match(path: Path):
                                e.get("minute") or 0,
                                e.get("second") or 0,
                                e.get("id") or 0))
-    return match_meta, events
+
+    full_meta = {
+        "match": match_raw,
+        "teams": teams_raw,
+        "substitutions": subs_raw,
+        "homeTeamId": home_id,
+        "awayTeamId": away_id,
+        "label": label,
+    }
+    return match_meta, events, full_meta
 
 
 def slim_event(ev):
@@ -202,7 +212,7 @@ class SimState:
             }
 
 
-def make_handler(match_meta, events_sorted, state: SimState):
+def make_handler(match_meta, events_sorted, state: SimState, full_meta=None):
     class Handler(BaseHTTPRequestHandler):
         server_version = "WyscoutMock/1.0"
 
@@ -230,10 +240,13 @@ def make_handler(match_meta, events_sorted, state: SimState):
                 return {}
 
         def do_GET(self):
-            if self.path.split("?", 1)[0] == "/events":
+            path = self.path.split("?", 1)[0]
+            if path == "/events":
                 self._serve_events()
-            elif self.path == "/control/status":
+            elif path == "/control/status":
                 self._serve_status()
+            elif path == "/match-meta":
+                self._json(200, full_meta or {})
             else:
                 self._json(404, {"error": "not_found", "path": self.path})
 
@@ -327,15 +340,16 @@ def main():
     args = parser.parse_args()
 
     print(f"Loading match from: {args.input}")
-    match_meta, events = load_match(args.input)
+    match_meta, events, full_meta = load_match(args.input)
     print(f"Match: {match_meta['label']} (wyId={match_meta['wyId']})")
     print(f"Loaded {len(events)} events. Speed multiplier: {args.speed}x")
 
     state = SimState(args.speed)
-    handler = make_handler(match_meta, events, state)
+    handler = make_handler(match_meta, events, state, full_meta=full_meta)
     server = ThreadingHTTPServer((args.host, args.port), handler)
     print(f"Serving on http://{args.host}:{args.port}")
     print(f"  GET  /events            -> cumulative event feed")
+    print(f"  GET  /match-meta        -> full match metadata (teams, subs, match)")
     print(f"  GET  /control/status    -> sim clock + event count")
     print(f"  POST /control/reset     -> restart simulation at 0:00")
     print(f"  POST /control/speed     -> body {{\"multiplier\": N}}")

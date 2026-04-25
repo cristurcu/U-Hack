@@ -51,6 +51,23 @@ def stats(match_id: int):
     return fresh
 
 
+@app.get("/events/{match_id}")
+def events(match_id: int):
+    """Live event stream snapshot — used by downstream insight services."""
+    store = _get_store()
+    evs = store.snapshot(match_id)
+    if not evs:
+        raise HTTPException(404, f"no events yet for match {match_id}")
+    home_id, away_id = store.teams(match_id)
+    return {
+        "matchId": match_id,
+        "homeTeamId": home_id,
+        "awayTeamId": away_id,
+        "eventCount": len(evs),
+        "events": evs,
+    }
+
+
 @app.get("/stats/{match_id}/chains")
 def chains(match_id: int,
            team: Optional[int] = Query(None, description="filter by team id"),

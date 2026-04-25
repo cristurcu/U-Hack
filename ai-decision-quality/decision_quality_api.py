@@ -712,6 +712,26 @@ def build_phase_response(request: PhaseDecisionRequest) -> Dict[str, Any]:
     return payload
 
 
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    import logging as _log
+    _log.basicConfig(level=_log.INFO,
+                     format="%(asctime)s %(levelname)s [%(threadName)s] %(name)s: %(message)s")
+    try:
+        from live_consumer import maybe_start
+        app.state.live_scorer = maybe_start(DEFAULT_MODEL_PATH)
+    except Exception as e:
+        _log.getLogger(__name__).warning("live scorer not started: %s", e)
+        app.state.live_scorer = None
+    yield
+    s = getattr(app.state, "live_scorer", None)
+    if s is not None:
+        s.stop()
+
+
 app = FastAPI(
     title="Decision Quality API",
     version="1.0.0",
@@ -719,6 +739,7 @@ app = FastAPI(
         "API pentru analiza calitatii deciziilor in fotbal. "
         "Primeste JSON de meci (Wyscout-style) si returneaza insight-uri pe faze si jucatori."
     ),
+    lifespan=_lifespan,
 )
 
 

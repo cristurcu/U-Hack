@@ -40,20 +40,13 @@ services:
       retries: 5
 
   wyscout-mock:
-    build:
-      context: ./mlem
-      dockerfile: Dockerfile.mock
+    build: ./wyscout-mock
     container_name: uhack-wyscout-mock
     ports:
       - "5001:5001"
-    volumes:
-      - ./mlem/u_cluj_wyscout_mock_match_events_april_2026.json:/app/match.json:ro
-    command: ["-i", "/app/match.json", "-p", "5001", "-s", "10"]
 
   stats-service:
-    build:
-      context: ./mlem
-      dockerfile: stats_service/Dockerfile
+    build: ./stats-service
     container_name: uhack-stats-service
     depends_on:
       kafka:
@@ -68,6 +61,40 @@ services:
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
+
+  ai-service:
+    build: ./ai-service
+    container_name: uhack-ai-service
+    depends_on:
+      - stats-service
+      - wyscout-mock
+    environment:
+      STATS_SERVICE_URL: http://stats-service:8000
+      WYSCOUT_MOCK_URL: http://wyscout-mock:5001
+    ports:
+      - "8001:8001"
+
+  ai-decision-quality:
+    build: ./ai-decision-quality
+    container_name: uhack-ai-decision-quality
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      IN_TOPIC: wyscout-events
+      OUT_TOPIC: event-scores
+      GROUP_ID: ai-decision-quality
+    ports:
+      - "8002:8002"
+
+  ai-tactical-intelligence:
+    build: ./ai-tactical-intelligence
+    container_name: uhack-ai-tactical
+    volumes:
+      - ./ai-tactical-intelligence/outputs:/app/outputs
+    ports:
+      - "8003:8003"
 
 volumes:
   redis-data:
