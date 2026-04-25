@@ -3,7 +3,9 @@ package UHack.Platform.service;
 import UHack.Platform.domain.Match;
 import UHack.Platform.repository.MatchRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -22,10 +24,26 @@ public class MatchService {
      * Returns the existing match row for {@code wyId}, or creates a new one.
      * Used by the wyscout-events consumer on every event so we always have a
      * row for the match the moment its first event lands.
+     *
+     * Concurrency-safe: multiple Kafka listener threads call this in parallel.
+     * If two threads race to create the same wyId, the loser catches the
+     * unique-constraint violation and re-fetches. We use REQUIRES_NEW for the
+     * insert attempt so a failed save's rollback doesn't poison the caller's
+     * outer transaction.
      */
-    @Transactional
     public Match findOrCreate(Long wyId) {
-        return matches.findByWyId(wyId).orElseGet(() -> matches.save(new Match(wyId)));
+        return matches.findByWyId(wyId).orElseGet(() -> tryCreate(wyId));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected Match tryCreate(Long wyId) {
+        try {
+            return matches.saveAndFlush(new Match(wyId));
+        } catch (DataIntegrityViolationException race) {
+            // Another thread won — the row exists now, fetch it.
+            return matches.findByWyId(wyId).orElseThrow(() -> new IllegalStateException(
+                    "findOrCreate race recovery failed for wyId=" + wyId, race));
+        }
     }
 
     @Transactional(readOnly = true)
