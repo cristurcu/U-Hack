@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,7 +11,23 @@ from insights_player_profile.schemas import PlayerProfileResponse
 from insights_pressing.pressing import build_pressing
 from insights_pressing.schemas import PressingResponse
 
-app = FastAPI(title="U-Hack AI Service")
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    try:
+        from live_publisher import maybe_start
+        app.state.publisher = maybe_start()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("publisher not started: %s", e)
+        app.state.publisher = None
+    yield
+    p = getattr(app.state, "publisher", None)
+    if p is not None:
+        p.stop()
+
+
+app = FastAPI(title="U-Hack AI Service", lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,

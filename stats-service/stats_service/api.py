@@ -36,6 +36,26 @@ def matches():
     return {"matches": store.summary()}
 
 
+def _summary_view(stats: dict) -> dict:
+    teamStats = {}
+    for tid, ts in (stats.get("teamStats") or {}).items():
+        if not ts:
+            continue
+        teamStats[tid] = {k: v for k, v in ts.items() if k != "topChainsByEffectiveness"}
+    return {
+        "metadata": stats.get("metadata"),
+        "teamStats": teamStats,
+        "comparison": stats.get("comparison"),
+    }
+
+
+@app.get("/stats/{match_id}/summary")
+def stats_summary(match_id: int):
+    """Compact view (no chain detail) — ~5 KB instead of ~280 KB."""
+    full = stats(match_id)
+    return _summary_view(full)
+
+
 @app.get("/stats/{match_id}")
 def stats(match_id: int):
     store = _get_store()
