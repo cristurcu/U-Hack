@@ -65,7 +65,7 @@ def build_pressing(
         stats[pid]["name"]     = event["player"]["name"]
         stats[pid]["position"] = event["player"].get("position")
         stats[pid][half]["duels"] += 1
-        stats[pid]["opp_half"] += 1 if event["location"]["x"] > 50 else 0
+        stats[pid]["opp_half"] += 1 if event["location"]["x"] > 66 else 0
 
         if won:
             stats[pid][half]["won"] += 1
