@@ -104,18 +104,15 @@ def player_profile(
 @app.get("/insights/pressing/{match_id}", response_model=PressingResponse)
 def pressing(
     match_id: int,
-    team_id: int = Query(..., description="Team ID to analyse pressing for"),
+    team_id: int = Query(..., description="Team ID to analyze"),
     period: str = Query("full", pattern="^(full|1H|2H)$"),
 ):
     element = load_match()
-
     if element["match"]["wyId"] != match_id:
         raise HTTPException(404, f"match {match_id} not found in mock data")
-
     team_info = (element.get("teams") or {}).get(str(team_id))
     if not team_info:
         raise HTTPException(404, f"team {team_id} not in match")
-
     result = build_pressing(
         events=element["events"],
         team_id=team_id,
