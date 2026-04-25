@@ -88,28 +88,55 @@ public class MatchLifecycleConsumer {
             return;
         }
 
-        ObjectNode payload = buildFullMatchPayload(match);
+        ObjectNode dqPayload = buildDqPayload(match);
+        ObjectNode tiPayload = buildTiPayload(match);
 
         // Fire-and-forget POST to both downstream services. They'll publish
         // to Kafka analysis-* topics on completion, picked up by AnalysisReportConsumer.
-        dispatch(dqUrl  + "/api/v1/matches/analyze",            payload, "decision-quality");
-        dispatch(tiUrl  + "/api/insights/from-players-stats",   payload, "tactical-intelligence");
+        // DQ accepts our event list directly; TI uses /from-events which
+        // aggregates them into players_stats server-side.
+        dispatch(dqUrl + "/api/v1/matches/analyze",   dqPayload, "decision-quality");
+        dispatch(tiUrl + "/api/insights/from-events", tiPayload, "tactical-intelligence");
     }
 
-    private ObjectNode buildFullMatchPayload(Match match) {
+    /** Decision-Quality input: {match_id, label, home/away_team_id, events:[…]}. */
+    private ObjectNode buildDqPayload(Match match) {
         ObjectNode root = mapper.createObjectNode();
         root.put("match_id", match.getWyId());
         root.put("label", match.getLabel());
         root.put("home_team_id", match.getHomeTeamId());
         root.put("away_team_id", match.getAwayTeamId());
+        root.set("events", buildEventsArray(match));
+        return root;
+    }
 
+    /**
+     * Tactical-Intelligence input for /from-events:
+     * {events:[…], match_id, home_team_name, away_team_name, home/away_score}.
+     * The team names are best-effort (we only have IDs in the DB right now).
+     */
+    private ObjectNode buildTiPayload(Match match) {
+        ObjectNode root = mapper.createObjectNode();
+        root.set("events", buildEventsArray(match));
+        if (match.getWyId() != null)        root.put("match_id", match.getWyId());
+        root.put("home_team_name", labelForTeam(match.getHomeTeamId(), "Home"));
+        root.put("away_team_name", labelForTeam(match.getAwayTeamId(), "Away"));
+        if (match.getScoreHome() != null)   root.put("home_score", match.getScoreHome());
+        if (match.getScoreAway() != null)   root.put("away_score", match.getScoreAway());
+        return root;
+    }
+
+    private ArrayNode buildEventsArray(Match match) {
         List<MatchEvent> all = events.findByMatchIdOrderByMinuteAscSecondAscIdAsc(match.getId());
         ArrayNode arr = mapper.createArrayNode();
         for (MatchEvent e : all) {
             if (e.getPayload() != null) arr.add(e.getPayload());
         }
-        root.set("events", arr);
-        return root;
+        return arr;
+    }
+
+    private static String labelForTeam(Long teamId, String fallback) {
+        return teamId == null ? fallback : "Team " + teamId;
     }
 
     private void dispatch(String url, ObjectNode payload, String label) {
