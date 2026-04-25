@@ -23,14 +23,20 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Subscribes to a synthetic {@code match-lifecycle} Kafka topic for events of
+ * Consumes the synthetic {@code match-lifecycle} topic; reacts to messages of
  * the form {@code {"event": "match_end", "match_id": ...}}.
  *
- * On match_end:
- *   1. Read the full match_event log from DB
- *   2. POST it to ai-decision-quality and ai-tactical-intelligence
- *   3. Those services do their own work and publish to analysis-* topics
- *      which the AnalysisReportConsumer above picks up
+ * On match_end, posts the full event log to ai-decision-quality so it can
+ * run its ML model on the finished match. The DQ service then publishes the
+ * report back on Kafka {@code analysis-decision-quality} where
+ * {@link AnalysisReportConsumer} persists it.
+ *
+ * NOTE: tactical-intelligence is intentionally NOT dispatched from here.
+ * TI consumes a different data source (the per-match {@code players_stats}
+ * JSON, not raw event logs), so its trigger is independent of this lifecycle.
+ * When TI is run via its own endpoints it still publishes to
+ * {@code analysis-tactical-intelligence}, which Platform persists the same
+ * way.
  */
 @Component
 public class MatchLifecycleConsumer {
@@ -42,14 +48,12 @@ public class MatchLifecycleConsumer {
     private final ObjectMapper mapper;
     private final RestTemplate http;
     private final String dqUrl;
-    private final String tiUrl;
 
     public MatchLifecycleConsumer(MatchRepository matches,
                                   MatchEventRepository events,
                                   ObjectMapper mapper,
                                   RestTemplateBuilder builder,
-                                  @Value("${ai-decision-quality.url}") String dqUrl,
-                                  @Value("${ai-tactical-intelligence.url}") String tiUrl) {
+                                  @Value("${ai-decision-quality.url}") String dqUrl) {
         this.matches = matches;
         this.events = events;
         this.mapper = mapper;
@@ -58,7 +62,6 @@ public class MatchLifecycleConsumer {
                 .readTimeout(Duration.ofSeconds(60))
                 .build();
         this.dqUrl = dqUrl;
-        this.tiUrl = tiUrl;
     }
 
     @KafkaListener(
@@ -88,15 +91,8 @@ public class MatchLifecycleConsumer {
             return;
         }
 
-        ObjectNode dqPayload = buildDqPayload(match);
-        ObjectNode tiPayload = buildTiPayload(match);
-
-        // Fire-and-forget POST to both downstream services. They'll publish
-        // to Kafka analysis-* topics on completion, picked up by AnalysisReportConsumer.
-        // DQ accepts our event list directly; TI uses /from-events which
-        // aggregates them into players_stats server-side.
-        dispatch(dqUrl + "/api/v1/matches/analyze",   dqPayload, "decision-quality");
-        dispatch(tiUrl + "/api/insights/from-events", tiPayload, "tactical-intelligence");
+        ObjectNode payload = buildDqPayload(match);
+        dispatch(dqUrl + "/api/v1/matches/analyze", payload, "decision-quality");
     }
 
     /** Decision-Quality input: {match_id, label, home/away_team_id, events:[…]}. */
@@ -106,37 +102,14 @@ public class MatchLifecycleConsumer {
         root.put("label", match.getLabel());
         root.put("home_team_id", match.getHomeTeamId());
         root.put("away_team_id", match.getAwayTeamId());
-        root.set("events", buildEventsArray(match));
-        return root;
-    }
 
-    /**
-     * Tactical-Intelligence input for /from-events:
-     * {events:[…], match_id, home_team_name, away_team_name, home/away_score}.
-     * The team names are best-effort (we only have IDs in the DB right now).
-     */
-    private ObjectNode buildTiPayload(Match match) {
-        ObjectNode root = mapper.createObjectNode();
-        root.set("events", buildEventsArray(match));
-        if (match.getWyId() != null)        root.put("match_id", match.getWyId());
-        root.put("home_team_name", labelForTeam(match.getHomeTeamId(), "Home"));
-        root.put("away_team_name", labelForTeam(match.getAwayTeamId(), "Away"));
-        if (match.getScoreHome() != null)   root.put("home_score", match.getScoreHome());
-        if (match.getScoreAway() != null)   root.put("away_score", match.getScoreAway());
-        return root;
-    }
-
-    private ArrayNode buildEventsArray(Match match) {
         List<MatchEvent> all = events.findByMatchIdOrderByMinuteAscSecondAscIdAsc(match.getId());
         ArrayNode arr = mapper.createArrayNode();
         for (MatchEvent e : all) {
             if (e.getPayload() != null) arr.add(e.getPayload());
         }
-        return arr;
-    }
-
-    private static String labelForTeam(Long teamId, String fallback) {
-        return teamId == null ? fallback : "Team " + teamId;
+        root.set("events", arr);
+        return root;
     }
 
     private void dispatch(String url, ObjectNode payload, String label) {

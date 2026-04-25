@@ -7,7 +7,6 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 
 from .api_service import MatchRequestPayload, TacticalInsightsService
-from .events_to_players_stats import events_to_players_stats
 
 app = FastAPI(
     title="Tactical Insights API",
@@ -31,19 +30,6 @@ class MatchInsightsRequest(BaseModel):
         default=None,
         description="Optional team name filter. If provided, response keeps only this team in finalReport.",
     )
-
-
-class EventsInsightsRequest(BaseModel):
-    """Same downstream pipeline as `/from-players-stats`, but takes raw Wyscout
-    events. The service aggregates them into `players_stats` internally.
-    Used by Platform's match_end lifecycle dispatch."""
-    events: list[dict[str, Any]] = Field(..., description="Raw Wyscout match events list.")
-    home_team_name: str = Field(default="Home", description="Display name for the home team.")
-    away_team_name: str = Field(default="Away", description="Display name for the away team.")
-    match_id: int | None = Field(default=None)
-    home_score: int | None = Field(default=None)
-    away_score: int | None = Field(default=None)
-    focus_team_name: str | None = Field(default=None)
 
 
 def _publish_kafka(payload: MatchRequestPayload, report: dict[str, Any]) -> None:
@@ -173,25 +159,6 @@ def precomputed_match_tactical_profile(match_id: int) -> dict[str, Any]:
 def insights_from_players_stats(request: MatchInsightsRequest) -> dict[str, Any]:
     payload = MatchRequestPayload(
         players_stats=request.players_stats,
-        home_team_name=request.home_team_name,
-        away_team_name=request.away_team_name,
-        match_id=request.match_id,
-        home_score=request.home_score,
-        away_score=request.away_score,
-        focus_team_name=request.focus_team_name,
-    )
-    return _build_live_report_or_http_error(payload)
-
-
-@app.post("/api/insights/from-events")
-def insights_from_events(request: EventsInsightsRequest) -> dict[str, Any]:
-    """Bridge endpoint: accepts a raw Wyscout event list (the shape Platform's
-    MatchLifecycleConsumer ships on match-end), aggregates it into
-    `players_stats` internally, and runs the same pipeline as
-    /api/insights/from-players-stats."""
-    players_stats = events_to_players_stats(request.events)
-    payload = MatchRequestPayload(
-        players_stats=players_stats,
         home_team_name=request.home_team_name,
         away_team_name=request.away_team_name,
         match_id=request.match_id,
