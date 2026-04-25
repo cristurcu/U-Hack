@@ -8,6 +8,10 @@ from insights_player_profile.player_profile import build_player_profile
 from insights_player_profile.schemas import PlayerProfileResponse
 from insights_pressing.pressing import build_pressing
 from insights_pressing.schemas import PressingResponse
+from insights_ball_losses.ball_losses import build_ball_losses
+from insights_ball_losses.schemas import BallLossesResponse
+from insights_line_breaks.line_breaks import build_line_breaks
+from insights_line_breaks.schemas import LineBreaksResponse
 
 app = FastAPI(title="U-Hack AI Service")
 
@@ -117,6 +121,64 @@ def pressing(
     return {
         "match_id": match_id,
         "team_id": team_id,
+        "period": period,
+        **result,
+    }
+
+
+@app.get("/insights/ball-losses/{match_id}", response_model=BallLossesResponse)
+def ball_losses(
+    match_id: int,
+    team_id: int = Query(..., description="Team ID to analyse ball losses for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+):
+    element = load_match(match_id=match_id)
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    team_info = (element.get("teams") or {}).get(str(team_id))
+    if not team_info:
+        raise HTTPException(404, f"team {team_id} not in match")
+
+    result = build_ball_losses(
+        events=element["events"],
+        team_id=team_id,
+        period=period,
+    )
+
+    return {
+        "match_id": match_id,
+        "team": {"id": team_id, "name": team_info["name"]},
+        "period": period,
+        **result,
+    }
+
+
+@app.get("/insights/line-breaks/{match_id}", response_model=LineBreaksResponse)
+def line_breaks(
+    match_id: int,
+    team_id: int = Query(..., description="Team ID to analyse line-breaking passes for"),
+    period: str = Query("full", pattern="^(full|1H|2H)$"),
+):
+    element = load_match(match_id=match_id)
+
+    if element["match"]["wyId"] != match_id:
+        raise HTTPException(404, f"match {match_id} not found in mock data")
+
+    team_info = (element.get("teams") or {}).get(str(team_id))
+    if not team_info:
+        raise HTTPException(404, f"team {team_id} not in match")
+
+    result = build_line_breaks(
+        events=element["events"],
+        team_id=team_id,
+        period=period,
+    )
+
+    return {
+        "match_id": match_id,
+        "team": {"id": team_id, "name": team_info["name"]},
         "period": period,
         **result,
     }
