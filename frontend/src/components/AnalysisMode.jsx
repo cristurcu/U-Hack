@@ -4,9 +4,9 @@ import DecisionQualityReport from "./DecisionQualityReport";
 import CoachChat from "./CoachChat";
 
 const TABS = [
-  { id: "tactical", label: "Tactical Intelligence" },
-  { id: "decision", label: "Decision Quality" },
-  { id: "chat",     label: "AI Coach Chat" },
+  { id: "tactical", label: "Inteligență Tactică" },
+  { id: "decision", label: "Calitatea Deciziilor" },
+  { id: "chat",     label: "Chat Antrenor AI" },
 ];
 
 const MOCK_MATCHES = [
@@ -41,7 +41,7 @@ export default function AnalysisMode({ liveState }) {
         flexShrink: 0,
       }}>
         <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)", whiteSpace: "nowrap" }}>
-          <div className="label" style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Select Match</div>
+          <div className="label" style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Selectează meciul</div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
           {MOCK_MATCHES.map((m) => {
@@ -90,13 +90,13 @@ export default function AnalysisMode({ liveState }) {
                 cursor: "pointer", padding: "6px 10px", fontSize: 14,
                 color: "rgba(0,0,0,0.5)",
               }}
-              title={sidebarOpen ? "Hide match list" : "Show match list"}
+              title={sidebarOpen ? "Ascunde lista" : "Arată lista"}
             >
               {sidebarOpen ? "◀" : "▶"}
             </button>
             <div>
               <h1 className="font-display" style={{ fontWeight: 900, fontSize: 40, textTransform: "uppercase", margin: 0, letterSpacing: "-1px" }}>
-                Post-Match Analysis
+                Analiză Post-Meci
               </h1>
               <p className="font-mono" style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
                 {selectedMatch.home} {selectedMatch.score} {selectedMatch.away} · {selectedMatch.date} · {selectedMatch.competition}

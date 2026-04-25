@@ -5,7 +5,7 @@ const MOCK_PRESSING = {
   firstHalfEfficiency: 0.47,
   secondHalfEfficiency: 0.52,
   intensityDrop: 0.05,
-  insight: "Pressing was largely ineffective, slight improvement in the second half.",
+  insight: "Pressingul a fost în mare parte ineficient, ușoară îmbunătățire în repriza a doua.",
   topPresser: "D. Oancea",
   players: [
     { id: 1002, name: "D. Oancea",  position: "RB",   pressingDuels: 6,  won: 4, efficiency: 0.67, inOpponentHalf: 0,  intensityDrop: -0.25 },
@@ -46,7 +46,7 @@ export default function PressingGauge({ data = MOCK_PRESSING, dark = true }) {
       {/* ── Team summary bar ── */}
       <div style={{ padding: "14px 18px", borderBottom: border, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
         <div>
-          <div className="label" style={{ opacity: 0.5, marginBottom: 2 }}>Pressing Efficiency · Live</div>
+          <div className="label" style={{ opacity: 0.5, marginBottom: 2 }}>Eficiență Pressing · Live</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <span className="font-display" style={{ fontWeight: 900, fontSize: 40, lineHeight: 1, color: teamColor }}>
               {teamEff}<span style={{ fontSize: 18, opacity: 0.6 }}>%</span>
@@ -60,8 +60,8 @@ export default function PressingGauge({ data = MOCK_PRESSING, dark = true }) {
         {/* Mini half bars */}
         <div style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 100 }}>
           {[
-            { label: "1st Half", val: data.firstHalfEfficiency ?? 0 },
-            { label: "2nd Half", val: data.secondHalfEfficiency ?? 0 },
+            { label: "Repriza 1", val: data.firstHalfEfficiency ?? 0 },
+            { label: "Repriza 2", val: data.secondHalfEfficiency ?? 0 },
           ].map((h) => (
             <div key={h.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span className="label" style={{ opacity: 0.5, width: 70 }}>{h.label}</span>
@@ -75,6 +75,7 @@ export default function PressingGauge({ data = MOCK_PRESSING, dark = true }) {
 
         <div style={{ textAlign: "right" }}>
           <div className="label" style={{ opacity: 0.4 }}>Top Presser</div>
+
           <div className="font-display" style={{ fontWeight: 700, fontSize: 14, textTransform: "uppercase" }}>{data.topPresser}</div>
         </div>
       </div>
@@ -88,7 +89,7 @@ export default function PressingGauge({ data = MOCK_PRESSING, dark = true }) {
       <div style={{ overflowY: "auto", maxHeight: 280 }} className="scroll-thin">
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 70px 32px", gap: 8, padding: "8px 18px", borderBottom: border }}>
-          {["Player", "Duels", "Won", "Effic.", "Trend"].map((h) => (
+          {["Jucător", "Dueluri", "Câștigate", "Efic.", "Trend"].map((h) => (
             <div key={h} className="label" style={{ opacity: 0.4, fontSize: 9 }}>{h}</div>
           ))}
         </div>

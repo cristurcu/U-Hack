@@ -15,22 +15,22 @@ const MOCK_REPORT = {
     shots_on_target: 4,
   },
   phases: [
-    { label: "0-15'",  pressing: 52, tempo: "High"   },
-    { label: "15-45'", pressing: 45, tempo: "Medium"  },
-    { label: "45-60'", pressing: 55, tempo: "High"    },
-    { label: "60-90'", pressing: 48, tempo: "Medium"  },
+    { label: "0-15'",  pressing: 52, tempo: "Ridicat"  },
+    { label: "15-45'", pressing: 45, tempo: "Mediu"    },
+    { label: "45-60'", pressing: 55, tempo: "Ridicat"  },
+    { label: "60-90'", pressing: 48, tempo: "Mediu"    },
   ],
   recommendations: [
-    "Press higher in the first 15 minutes to force errors",
-    "Bic needs rest — consider substitution after 70'",
-    "Exploit right flank more — Oancea has space to advance",
-    "Thiam should look for the shot earlier in the box",
+    "Presați mai sus în primele 15 minute pentru a forța erori",
+    "Bic are nevoie de odihnă — luați în calcul o substituție după min. 70",
+    "Exploatați mai mult flancul drept — Oancea are spațiu să avanseze",
+    "Thiam trebuie să caute șutul mai devreme în careu",
   ],
   key_moments: [
-    { minute: 58, text: "GOAL — Stoica finishes from Nistor's through ball (xG 0.62)" },
-    { minute: 45, text: "Popa missed high-value shot opportunity (xG 0.48)" },
-    { minute: 32, text: "Pressing breakdown in midfield — Hermannstadt counter" },
-    { minute: 67, text: "Bic intensity drop detected — fatigue alert triggered" },
+    { minute: 58, text: "GOL — Stoica finalizează din pasă lui Nistor (xG 0.62)" },
+    { minute: 45, text: "Popa a ratat o oportunitate de șut cu valoare ridicată (xG 0.48)" },
+    { minute: 32, text: "Breakdown pressing în mijlocul terenului — contraatac Hermannstadt" },
+    { minute: 67, text: "Scădere de intensitate detectată la Bic — alertă oboseală declanșată" },
   ],
 };
 
@@ -56,7 +56,7 @@ export default function TacticalReport({ dark = false }) {
   if (!report) {
     return (
       <div style={{ padding: 24, fontSize: 13, opacity: 0.5, fontFamily: "JetBrains Mono, monospace" }}>
-        Loading tactical report…
+        Se încarcă raportul tactic…
       </div>
     );
   }
@@ -71,7 +71,7 @@ export default function TacticalReport({ dark = false }) {
 
         {/* Recommendations */}
         <div style={{ padding: 24, background: "#fff", border: "1px solid rgba(0,0,0,0.1)" }}>
-          <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Recommendations · Coach View</div>
+          <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Recomandări · Vizualizare Antrenor</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {(report.recommendations || []).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderLeft: "3px solid var(--uc-red)", background: "rgba(0,0,0,0.015)" }}>
@@ -86,13 +86,13 @@ export default function TacticalReport({ dark = false }) {
         <div style={{ padding: 24, background: "#fff", border: "1px solid rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div className="label" style={{ opacity: 0.6, display: "flex", alignItems: "center", gap: 6 }}>
-              <Sparkles size={12} /> AI Tactical Insight
+              <Sparkles size={12} /> Insight Tactic AI
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              {["pressing", "fatigue", "general"].map((t) => (
+              {[{ key: "pressing", label: "pressing" }, { key: "fatigue", label: "oboseală" }, { key: "general", label: "general" }].map((t) => (
                 <button
-                  key={t}
-                  onClick={() => askInsight(t)}
+                  key={t.key}
+                  onClick={() => askInsight(t.key)}
                   style={{
                     padding: "4px 12px",
                     fontSize: 11,
@@ -104,14 +104,14 @@ export default function TacticalReport({ dark = false }) {
                     cursor: "pointer",
                   }}
                 >
-                  {t}
+                  {t.label}
                 </button>
               ))}
             </div>
           </div>
           {loading && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, opacity: 0.7 }}>
-              <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Analyzing…
+              <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Se analizează…
             </div>
           )}
           {insight && (
@@ -120,14 +120,14 @@ export default function TacticalReport({ dark = false }) {
             </div>
           )}
           {!insight && !loading && (
-            <div style={{ fontSize: 13, opacity: 0.5 }}>Pick a topic to generate analyst commentary.</div>
+            <div style={{ fontSize: 13, opacity: 0.5 }}>Alege un subiect pentru a genera comentariu analitic.</div>
           )}
         </div>
       </div>
 
       {/* RIGHT — Phase Breakdown */}
       <div style={{ padding: 24, background: "#fff", border: "1px solid rgba(0,0,0,0.1)" }}>
-        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Phase Breakdown · {s.formation}</div>
+        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Faze de joc · {s.formation}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {(report.phases || []).map((ph, i) => (
             <div key={i} style={{ border: "1px solid rgba(0,0,0,0.08)", padding: "14px 16px" }}>
@@ -147,7 +147,7 @@ export default function TacticalReport({ dark = false }) {
 
         {/* Key moments */}
         <div style={{ marginTop: 20 }}>
-          <div className="label" style={{ opacity: 0.6, marginBottom: 12 }}>Key Moments</div>
+          <div className="label" style={{ opacity: 0.6, marginBottom: 12 }}>Momente cheie</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {(report.key_moments || []).map((km, i) => (
               <div key={i} style={{ display: "flex", gap: 10, fontSize: 12, alignItems: "flex-start" }}>

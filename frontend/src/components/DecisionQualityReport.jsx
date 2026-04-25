@@ -1,21 +1,21 @@
 import { useMemo } from "react";
 
 const MOCK_EVENTS = [
-  { player: "D. Popa",    extra: { quality: "poor"    }, minute: 45, text: "Should have shot — chose to pass (lost xG 0.48)" },
-  { player: "D. Popa",    extra: { quality: "good"    }, minute: 12, text: "Perfect through ball to Thiam" },
-  { player: "D. Popa",    extra: { quality: "poor"    }, minute: 67, text: "Lost possession under pressure" },
-  { player: "I. Stoica",  extra: { quality: "good"    }, minute: 58, text: "Goal — correct decision to shoot" },
-  { player: "I. Stoica",  extra: { quality: "good"    }, minute: 34, text: "Smart pass beats the press" },
-  { player: "I. Stoica",  extra: { quality: "average" }, minute: 71, text: "Hold up play — neutral decision" },
-  { player: "O. Bic",     extra: { quality: "good"    }, minute: 22, text: "Interception — correct pressing trigger" },
-  { player: "O. Bic",     extra: { quality: "poor"    }, minute: 55, text: "Duel lost — wrong moment to engage" },
-  { player: "O. Bic",     extra: { quality: "average" }, minute: 40, text: "Safe pass backwards" },
-  { player: "D. Nistor",  extra: { quality: "good"    }, minute: 18, text: "Line-breaking pass to Popa" },
-  { player: "D. Nistor",  extra: { quality: "poor"    }, minute: 63, text: "Risky carry — lost ball in own half" },
-  { player: "M. Thiam",   extra: { quality: "good"    }, minute: 30, text: "Shot on target — right decision" },
-  { player: "M. Thiam",   extra: { quality: "poor"    }, minute: 48, text: "Held ball too long — opportunity lost" },
-  { player: "A. Chipciu", extra: { quality: "good"    }, minute: 25, text: "Overlapping run creates space" },
-  { player: "A. Chipciu", extra: { quality: "average" }, minute: 60, text: "Safe cross — predictable" },
+  { player: "D. Popa",    extra: { quality: "poor"    }, minute: 45, text: "Trebuia să șuteze — a ales să paseze (pierdut xG 0.48)" },
+  { player: "D. Popa",    extra: { quality: "good"    }, minute: 12, text: "Pasă în adâncime perfectă la Thiam" },
+  { player: "D. Popa",    extra: { quality: "poor"    }, minute: 67, text: "Pierdut posesia sub presiune" },
+  { player: "I. Stoica",  extra: { quality: "good"    }, minute: 58, text: "Gol — decizie corectă de a șuta" },
+  { player: "I. Stoica",  extra: { quality: "good"    }, minute: 34, text: "Pasă inteligentă bate pressingul" },
+  { player: "I. Stoica",  extra: { quality: "average" }, minute: 71, text: "Joc de menținere — decizie neutră" },
+  { player: "O. Bic",     extra: { quality: "good"    }, minute: 22, text: "Intercepție — declanșator pressing corect" },
+  { player: "O. Bic",     extra: { quality: "poor"    }, minute: 55, text: "Duel pierdut — moment greșit pentru a angaja" },
+  { player: "O. Bic",     extra: { quality: "average" }, minute: 40, text: "Pasă sigură înapoi" },
+  { player: "D. Nistor",  extra: { quality: "good"    }, minute: 18, text: "Pasă care sparge linia la Popa" },
+  { player: "D. Nistor",  extra: { quality: "poor"    }, minute: 63, text: "Conducere riscantă — minge pierdută în propria jumătate" },
+  { player: "M. Thiam",   extra: { quality: "good"    }, minute: 30, text: "Șut pe poartă — decizie corectă" },
+  { player: "M. Thiam",   extra: { quality: "poor"    }, minute: 48, text: "A ținut mingea prea mult — oportunitate pierdută" },
+  { player: "A. Chipciu", extra: { quality: "good"    }, minute: 25, text: "Alergare suprapusă creează spațiu" },
+  { player: "A. Chipciu", extra: { quality: "average" }, minute: 60, text: "Centrare sigură — previzibilă" },
 ];
 
 export default function DecisionQualityReport({ events = MOCK_EVENTS }) {
@@ -38,11 +38,11 @@ export default function DecisionQualityReport({ events = MOCK_EVENTS }) {
 
       {/* Player table */}
       <div style={{ padding: 24, background: "#fff", border: "1px solid rgba(0,0,0,0.1)" }}>
-        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Decision Quality · Per Player</div>
+        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Calitatea Deciziilor · Per Jucător</div>
         <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.1)", textAlign: "left" }}>
-              {["Player", "Total", "Good", "Poor", "Quality Score"].map((h) => (
+              {["Jucător", "Total", "Bune", "Slabe", "Scor calitate"].map((h) => (
                 <th key={h} className="label" style={{ padding: "8px 0", opacity: 0.6, fontWeight: 700 }}>{h}</th>
               ))}
             </tr>
@@ -74,14 +74,14 @@ export default function DecisionQualityReport({ events = MOCK_EVENTS }) {
 
       {/* Recent decisions feed */}
       <div style={{ padding: 24, background: "#fff", border: "1px solid rgba(0,0,0,0.1)" }}>
-        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Key Decisions · Match Timeline</div>
+        <div className="label" style={{ opacity: 0.6, marginBottom: 16 }}>Decizii cheie · Cronologia meciului</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {recentEvents.map((e, i) => {
             const q = e.extra?.quality;
             const borderLeft = q === "good" ? "3px solid #22c55e" : q === "poor" ? "3px solid var(--uc-red)" : "3px solid #f59e0b";
-            const badge = q === "good" ? { bg: "#dcfce7", color: "#16a34a", label: "GOOD" }
-                        : q === "poor" ? { bg: "#fee2e2", color: "#E30613", label: "POOR" }
-                        : { bg: "#fef9c3", color: "#b45309", label: "AVG" };
+            const badge = q === "good" ? { bg: "#dcfce7", color: "#16a34a", label: "BUNĂ" }
+                        : q === "poor" ? { bg: "#fee2e2", color: "#E30613", label: "SLABĂ" }
+                        : { bg: "#fef9c3", color: "#b45309", label: "MED" };
             return (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderLeft, background: "rgba(0,0,0,0.015)" }}>
                 <span className="font-mono" style={{ fontSize: 11, opacity: 0.5, flexShrink: 0, marginTop: 2 }}>

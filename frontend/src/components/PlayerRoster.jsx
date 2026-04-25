@@ -11,9 +11,9 @@ const CLUSTER_META = {
 };
 
 const AC_META = {
-  below_optimal: { label: "BELOW OPT", bg: "#fef9c3", color: "#a16207", border: "#fde047" },
-  optimal:       { label: "OPTIMAL",   bg: "#dcfce7", color: "#15803d", border: "#86efac" },
-  above_optimal: { label: "ABOVE OPT", bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
+  below_optimal: { label: "SUB OPT",  bg: "#fef9c3", color: "#a16207", border: "#fde047" },
+  optimal:       { label: "OPTIM",    bg: "#dcfce7", color: "#15803d", border: "#86efac" },
+  above_optimal: { label: "PESTE OPT", bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
 };
 
 function formColor(v) {
@@ -35,9 +35,9 @@ function fatigueBg(prob) {
 }
 
 function fatigueLabel(prob) {
-  if (prob >= 0.65) return "HIGH RISK";
-  if (prob >= 0.40) return "MODERATE";
-  return "LOW RISK";
+  if (prob >= 0.65) return "RISC RIDICAT";
+  if (prob >= 0.40) return "MODERAT";
+  return "RISC SCĂZUT";
 }
 
 function MiniBar({ value, color, max = 100 }) {
@@ -177,7 +177,7 @@ function PlayerCard({ p }) {
 
           {/* Form Score */}
           <div>
-            <div className="label" style={{ fontSize: 9, opacity: 0.35, marginBottom: 5 }}>Form Score</div>
+            <div className="label" style={{ fontSize: 9, opacity: 0.35, marginBottom: 5 }}>Scor Formă</div>
             <div style={{ display: "flex", gap: 8 }}>
               {[{ label: "7d", val: p.form_score_7d }, { label: "14d", val: p.form_score_14d }].map(f => (
                 <div key={f.label} style={{ flex: 1 }}>
@@ -193,19 +193,19 @@ function PlayerCard({ p }) {
 
           {/* Fatigue Risk */}
           <div style={{ padding: "6px 8px", background: fatigueBg(fProb), borderLeft: `3px solid ${fatigueColor(fProb)}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: fatigueColor(fProb), fontWeight: 700 }}>Fatigue Risk</span>
+            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: fatigueColor(fProb), fontWeight: 700 }}>Risc Oboseală</span>
             <span className="font-display" style={{ fontWeight: 900, fontSize: 18, color: fatigueColor(fProb) }}>{Math.round(fProb * 100)}%</span>
           </div>
 
           {/* AC Status */}
           <div style={{ padding: "4px 8px", background: acMeta.bg, borderLeft: `3px solid ${acMeta.color}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: acMeta.color, fontWeight: 700 }}>A:C Status</span>
+            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: acMeta.color, fontWeight: 700 }}>Status A:C</span>
             <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: acMeta.color, fontWeight: 700 }}>{acMeta.label}</span>
           </div>
 
           {/* A:C Windows */}
           <div>
-            <div className="label" style={{ fontSize: 9, opacity: 0.35, marginBottom: 5 }}>Acute:Chronic Windows</div>
+            <div className="label" style={{ fontSize: 9, opacity: 0.35, marginBottom: 5 }}>Ferestre Acut:Cronic</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px" }}>
               {[
                 { label: "3:21", val: p.ac_321 },
@@ -241,7 +241,7 @@ export default function PlayerRoster() {
 
   const positions = ["ALL", "GK", "CB", "RB", "LB", "DMF", "CMF", "AMF", "RW", "LW", "CF"];
   const risks     = ["ALL", "below_optimal", "optimal", "above_optimal"];
-  const riskLabels = { ALL: "All", below_optimal: "Below Opt", optimal: "Optimal", above_optimal: "Above Opt" };
+  const riskLabels = { ALL: "Toți", below_optimal: "Sub optim", optimal: "Optim", above_optimal: "Peste optim" };
 
   const filtered = PLAYERS.filter((p) => {
     const posOk  = filter === "ALL"     || p.pos === filter;
@@ -259,18 +259,18 @@ export default function PlayerRoster() {
       <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
         <div>
           <h1 className="font-display" style={{ fontWeight: 900, fontSize: 40, textTransform: "uppercase", margin: 0, letterSpacing: "-1px" }}>
-            Squad Load Monitor
+            Monitor Încărcare Lot
           </h1>
           <p className="font-mono" style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
-            {PLAYERS.length} players · Hover for detailed analytics
+            {PLAYERS.length} jucători · Hover pentru analiză detaliată
           </p>
         </div>
         {/* Summary stats */}
         <div style={{ display: "flex", gap: 12 }}>
           {[
-            { label: "Avg Form (7d)", value: avgForm, color: formColor(avgForm) },
-            { label: "High Fatigue Risk", value: highRisk, color: "#E30613" },
-            { label: "Total Players", value: PLAYERS.length, color: "#0a0a0a" },
+            { label: "Form mediu (7z)", value: avgForm, color: formColor(avgForm) },
+            { label: "Risc oboseală ridicat", value: highRisk, color: "#E30613" },
+            { label: "Total jucători", value: PLAYERS.length, color: "#0a0a0a" },
           ].map((s) => (
             <div key={s.label} style={{ padding: "10px 18px", background: "#fff", border: "1px solid rgba(0,0,0,0.1)", textAlign: "center" }}>
               <div className="label" style={{ fontSize: 9, opacity: 0.5 }}>{s.label}</div>

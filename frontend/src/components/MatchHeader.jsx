@@ -39,7 +39,7 @@ export default function MatchHeader({ state, mode, setMode }) {
               {home}
             </div>
             <div className="label" style={{ opacity: 0.5, marginTop: 2 }}>
-              Football Analytics
+              Analiză Fotbal
             </div>
           </div>
         </div>
@@ -47,7 +47,7 @@ export default function MatchHeader({ state, mode, setMode }) {
         {/* Scoreboard */}
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <div style={{ textAlign: "right" }}>
-            <div className="label" style={{ opacity: 0.5 }}>Home</div>
+            <div className="label" style={{ opacity: 0.5 }}>Acasă</div>
             <div className="font-display" style={{ fontWeight: 900, fontSize: 28, textTransform: "uppercase" }}>{home}</div>
           </div>
           <div
@@ -68,7 +68,7 @@ export default function MatchHeader({ state, mode, setMode }) {
             </div>
           </div>
           <div style={{ textAlign: "left" }}>
-            <div className="label" style={{ opacity: 0.5 }}>Away</div>
+            <div className="label" style={{ opacity: 0.5 }}>Oaspete</div>
             <div className="font-display" style={{ fontWeight: 900, fontSize: 28, textTransform: "uppercase" }}>{away}</div>
           </div>
         </div>
@@ -106,6 +106,7 @@ export default function MatchHeader({ state, mode, setMode }) {
             />
             <Activity size={13} /> Live
           </button>
+
           <button
             onClick={() => setMode("analysis")}
             style={{
@@ -126,7 +127,7 @@ export default function MatchHeader({ state, mode, setMode }) {
               transition: "all 0.2s",
             }}
           >
-            <BarChart3 size={13} /> Analysis
+            <BarChart3 size={13} /> Analiză
           </button>
           <button
             onClick={() => setMode("squad")}
@@ -148,7 +149,7 @@ export default function MatchHeader({ state, mode, setMode }) {
               transition: "all 0.2s",
             }}
           >
-            <Users size={13} /> Squad
+            <Users size={13} /> Lot
           </button>
         </div>
       </div>
