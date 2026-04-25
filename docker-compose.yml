@@ -39,6 +39,23 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: uhack-postgres
+    environment:
+      POSTGRES_DB: uhack
+      POSTGRES_USER: uhack
+      POSTGRES_PASSWORD: uhack
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uhack -d uhack"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   wyscout-mock:
     build: ./wyscout-mock
     container_name: uhack-wyscout-mock
@@ -107,3 +124,4 @@ services:
 
 volumes:
   redis-data:
+  postgres-data:

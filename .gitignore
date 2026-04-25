@@ -218,3 +218,19 @@ mock_data/
 
 # Match data — club files, not for version control
 ai-service/mock_data/
+
+# Node / frontend
+node_modules/
+*.tsbuildinfo
+.next/
+out/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Maven build output (covered by `target/` above but explicit for clarity)
+Platform/target/
