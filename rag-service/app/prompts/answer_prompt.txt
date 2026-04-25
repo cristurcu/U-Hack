@@ -12,6 +12,8 @@ The API already returns sources separately.
 7) Maximum total bullets in final answer: between 5 and 7 bullets total.
 8) Each bullet must be one short sentence.
 9) No long paragraphs and no ending summary paragraph.
+10) Explain WHAT happened from match documents and WHY it matters from club knowledge documents when available.
+11) If club knowledge evidence is missing, explicitly mention that the WHY explanation is limited.
 
 Output format:
 Observatii:

@@ -11,6 +11,8 @@ class RagQueryRequest(BaseModel):
     sessionId: str = Field(min_length=3, max_length=128)
     question: str = Field(min_length=3, max_length=2000)
     matchId: int = Field(gt=0)
+    clubKey: str | None = Field(default=None, min_length=2, max_length=64)
+    includeClubKnowledge: bool = False
     teamId: int | None = Field(default=None, gt=0)
     topK: int | None = Field(default=None, ge=1, le=100)
     documentTypes: list[str] | None = None
@@ -41,6 +43,14 @@ class RagQueryRequest(BaseModel):
         cleaned = [item.strip() for item in value if item and item.strip()]
         return cleaned or None
 
+    @field_validator("clubKey")
+    @classmethod
+    def _normalize_club_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        text = value.strip().lower()
+        return text or None
+
 
 class RagSourceRef(BaseModel):
     docId: str
@@ -48,6 +58,8 @@ class RagSourceRef(BaseModel):
     title: str | None = None
     score: float
     sourceService: str
+    sourceScope: str = Field(pattern="^(match|club)$")
+    page: int | None = None
 
 
 class RagQueryResponse(BaseModel):

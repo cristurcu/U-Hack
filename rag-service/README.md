@@ -4,10 +4,15 @@ Serviciu FastAPI pentru hackathon, cu 2 capabilitati:
 - indexare documente tactice din output-uri model;
 - query RAG peste FAISS + generare raspuns (OpenAI sau fallback local).
 
+Extensie noua:
+- indexare club knowledge din PDF (`ANALIZA SPORTIVA.pdf`);
+- dual retrieval (`match` + `club knowledge`) in acelasi raspuns.
+
 ## Contract De Integrare (Cine Trimite Request-uri Cui)
 
 1. `Data producer` (pipeline/orchestrator/backend) trimite catre acest serviciu:
 - `POST /index/match` cu output-urile modelelor (`fusion`, `tacticalBaseline`, `decisionQuality`, etc.).
+- `POST /index/club` cu metadate club + `pdfPath`.
 
 2. `Frontend` (sau BFF-ul frontendului) trimite catre acest serviciu:
 - `POST /rag/query` cu `sessionId`, `question`, `matchId` (minim).
@@ -17,7 +22,8 @@ Serviciu FastAPI pentru hackathon, cu 2 capabilitati:
 - OpenAI Responses API (doar daca `RAG_LLM_PROVIDER=openai` si `OPENAI_API_KEY` este setat).
 
 4. Persistenta locala:
-- FAISS + metadate JSON in `storage/vector_store/match_<matchId>/`.
+- FAISS + metadate JSON in `storage/vector_store/match_<matchId>/`;
+- FAISS + metadate JSON in `storage/vector_store/club_knowledge_<clubKey>/`.
 
 ## Rulare Locala
 
@@ -59,7 +65,10 @@ Request body (`IndexMatchRequest`):
     "decisionQuality": {},
     "playerProfiles": [],
     "pressing": {},
-    "passingNetwork": {}
+    "passingNetwork": {},
+    "lineBreaks": {},
+    "ballLosses": {},
+    "attackingPatterns": {}
   },
   "options": {
     "vectorStore": "faiss",
@@ -74,6 +83,8 @@ Note contract:
 - `matchId` obligatoriu (`>0`).
 - `outputs` obligatoriu ca obiect; campurile interne pot lipsi.
 - compatibilitate typo legacy: `passingNewtork` este acceptat.
+- noile output-uri sunt acceptate ca `lineBreaks`/`ballLosses` si compatibil `line_breaks`/`ball_losses`.
+- pentru attacking patterns sunt acceptate `attackingPatterns` si compatibil `attacking_patterns`.
 
 Response (`BuildDocumentsResponse`):
 ```json
@@ -135,6 +146,33 @@ Response (`IndexMatchResponse`):
 }
 ```
 
+### `POST /documents/build/club`
+
+Construieste documente statice din PDF, fara indexare.
+
+Request body (`IndexClubKnowledgeRequest`):
+```json
+{
+  "clubKey": "u_cluj",
+  "teamId": 14,
+  "teamName": "Universitatea Cluj",
+  "pdfPath": "ANALIZA SPORTIVA.pdf",
+  "options": {
+    "vectorStore": "faiss",
+    "rebuild": true,
+    "maxPages": 120,
+    "maxCharsPerPage": 3000
+  }
+}
+```
+
+### `POST /index/club`
+
+Indexare completa club knowledge: extractie PDF + build documente + embeddings + persistenta FAISS.
+
+Exemplu payload:
+- `demo_index_club_payload.json`
+
 ### `GET /index/matches`
 
 Response:
@@ -148,6 +186,14 @@ Response:
   }
 ]
 ```
+
+### `GET /index/clubs`
+
+Returneaza colectiile statice disponibile (prefix `club_knowledge_`).
+
+### `GET /index/clubs/{clubKey}/documents`
+
+Returneaza documentele statice indexate pentru club.
 
 ### `GET /index/matches/{matchId}/documents`
 
@@ -164,6 +210,8 @@ Request body (`RagQueryRequest`):
   "sessionId": "9f9b7f1c-0d0d-4ea0-94be-8f9b0e4dd7ba",
   "question": "Care au fost principalele riscuri tactice?",
   "matchId": 900000000,
+  "clubKey": "u_cluj",
+  "includeClubKnowledge": true,
   "teamId": 14,
   "topK": 4,
   "documentTypes": [
@@ -177,7 +225,7 @@ Request body (`RagQueryRequest`):
 
 Campuri:
 - obligatorii: `sessionId`, `question`, `matchId`.
-- optionale: `teamId`, `topK`, `documentTypes`, `minScore`, `includeDebug`.
+- optionale: `clubKey`, `includeClubKnowledge`, `teamId`, `topK`, `documentTypes`, `minScore`, `includeDebug`.
 
 Request minim recomandat pentru frontend:
 ```json
@@ -201,7 +249,9 @@ Response (`RagQueryResponse`):
       "documentType": "baseline_summary",
       "title": "Tactical baseline summary",
       "score": 0.2015,
-      "sourceService": "tactical-baseline-service"
+      "sourceService": "tactical-baseline-service",
+      "sourceScope": "match",
+      "page": null
     }
   ],
   "warnings": [],
@@ -209,6 +259,9 @@ Response (`RagQueryResponse`):
   "model": "gpt-5-mini"
 }
 ```
+
+Exemplu payload dual retrieval:
+- `demo_rag_club_query_payload.json`
 
 ### `POST /rag/query/debug`
 
@@ -221,9 +274,17 @@ Acelasi input ca `/rag/query`, dar include extra:
 
 Lista meciurilor disponibile pentru retrieval (citite din storage vectorial).
 
+### `GET /rag/clubs`
+
+Lista colectiilor club knowledge disponibile pentru retrieval.
+
 ### `GET /rag/matches/{matchId}/sources?limit=100`
 
 Returneaza documentele brute ale meciului (fara generare raspuns LLM).
+
+### `GET /rag/clubs/{clubKey}/sources?limit=100`
+
+Returneaza documentele brute statice din colectia club knowledge.
 
 ### `GET /rag/sessions/{sessionId}/history`
 
@@ -281,6 +342,7 @@ OPENAI_API_KEY=your_key_here
 ```powershell
 .\.venv\Scripts\python .\smoke_test.py
 .\.venv\Scripts\python .\smoke_test_rag.py
+.\.venv\Scripts\python .\smoke_test_club_rag.py
 ```
 
 ## Storage Layout
@@ -289,6 +351,9 @@ OPENAI_API_KEY=your_key_here
 storage/
   vector_store/
     match_<matchId>/
+      index.faiss
+      documents.json
+    club_knowledge_<clubKey>/
       index.faiss
       documents.json
 ```
