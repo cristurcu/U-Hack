@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LiveInsightRepository extends JpaRepository<LiveInsight, Long> {
-    Optional<LiveInsight> findByMatchIdAndType(Long matchId, LiveInsight.Type type);
+    Optional<LiveInsight> findByMatchIdAndTypeAndTeamId(Long matchId, LiveInsight.Type type, Long teamId);
+    List<LiveInsight> findByMatchIdAndType(Long matchId, LiveInsight.Type type);
     List<LiveInsight> findByMatchId(Long matchId);
 }

@@ -58,11 +58,12 @@ public class LiveInsightConsumer {
         }
 
         Long matchId = body.has("match_id") ? body.get("match_id").asLong() : null;
+        Long teamId  = body.has("team_id")  ? body.get("team_id").asLong()  : null;
         String type = body.path("type").asText(null);
         JsonNode payload = body.path("payload");
 
-        if (matchId == null || type == null || payload.isMissingNode()) {
-            log.warn("Insight missing match_id/type/payload: {}", raw);
+        if (matchId == null || teamId == null || type == null || payload.isMissingNode()) {
+            log.warn("Insight missing match_id/team_id/type/payload: {}", raw);
             return;
         }
 
@@ -74,7 +75,7 @@ public class LiveInsightConsumer {
 
         // Make sure we have a Match row keyed by wyId for this insight
         var match = matches.findOrCreate(matchId);
-        insights.upsert(match.getId(), liveType, payload);
+        insights.upsert(match.getId(), teamId, liveType, payload);
     }
 
     private LiveInsight.Type mapType(String wireType) {

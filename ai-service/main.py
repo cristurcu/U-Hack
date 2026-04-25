@@ -18,17 +18,33 @@ from insights_line_breaks.schemas import LineBreaksResponse
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
+    import logging
+    log = logging.getLogger(__name__)
+
+    # Kafka consumer (fills EventStore from `wyscout-events`)
     try:
-        from live_publisher import maybe_start
-        app.state.publisher = maybe_start()
+        from kafka_consumer import maybe_start as start_consumer
+        app.state.consumer = start_consumer()
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning("publisher not started: %s", e)
+        log.warning("kafka consumer not started: %s", e)
+        app.state.consumer = None
+
+    # Periodic publisher (computes insights → Kafka insights-* topics)
+    try:
+        from live_publisher import maybe_start as start_publisher
+        app.state.publisher = start_publisher()
+    except Exception as e:
+        log.warning("publisher not started: %s", e)
         app.state.publisher = None
+
     yield
+
     p = getattr(app.state, "publisher", None)
     if p is not None:
         p.stop()
+    c = getattr(app.state, "consumer", None)
+    if c is not None:
+        c.stop()
 
 
 app = FastAPI(title="U-Hack AI Service", lifespan=_lifespan)

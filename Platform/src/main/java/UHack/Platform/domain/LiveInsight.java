@@ -15,7 +15,7 @@ import java.time.Instant;
  */
 @Entity
 @Table(name = "live_insight",
-        uniqueConstraints = @UniqueConstraint(name = "uk_live_insight", columnNames = {"match_id", "type"}),
+        uniqueConstraints = @UniqueConstraint(name = "uk_live_insight", columnNames = {"match_id", "type", "team_id"}),
         indexes = @Index(name = "idx_live_insight_match", columnList = "match_id"))
 public class LiveInsight {
 
@@ -34,6 +34,9 @@ public class LiveInsight {
     @Column(name = "match_id", nullable = false)
     private Long matchId;
 
+    @Column(name = "team_id", nullable = false)
+    private Long teamId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 32)
     private Type type;
@@ -47,8 +50,9 @@ public class LiveInsight {
 
     public LiveInsight() { }
 
-    public LiveInsight(Long matchId, Type type, JsonNode payload) {
+    public LiveInsight(Long matchId, Long teamId, Type type, JsonNode payload) {
         this.matchId = matchId;
+        this.teamId = teamId;
         this.type = type;
         this.payload = payload;
     }
@@ -56,6 +60,8 @@ public class LiveInsight {
     public Long getId() { return id; }
     public Long getMatchId() { return matchId; }
     public void setMatchId(Long matchId) { this.matchId = matchId; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Type getType() { return type; }
     public void setType(Type type) { this.type = type; }
     public Instant getComputedAt() { return computedAt; }

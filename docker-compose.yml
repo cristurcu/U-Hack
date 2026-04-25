@@ -62,39 +62,24 @@ services:
     ports:
       - "5001:5001"
 
-  stats-service:
-    build: ./stats-service
-    container_name: uhack-stats-service
-    depends_on:
-      kafka:
-        condition: service_healthy
-    environment:
-      KAFKA_BOOTSTRAP: kafka:9092
-      IN_TOPIC: wyscout-events
-      OUT_TOPIC: match-stats
-      GROUP_ID: stats-service
-      RECOMPUTE_MS: "2000"
-      PORT: "8000"
-      LOG_LEVEL: INFO
-    ports:
-      - "8000:8000"
-
   ai-service:
     build: ./ai-service
     container_name: uhack-ai-service
     depends_on:
       kafka:
         condition: service_healthy
-      stats-service:
-        condition: service_started
       wyscout-mock:
         condition: service_started
     environment:
-      STATS_SERVICE_URL: http://stats-service:8000
       WYSCOUT_MOCK_URL: http://wyscout-mock:5001
       KAFKA_BOOTSTRAP: kafka:9092
-      OUT_TOPIC_PASSING: passing-network
-      OUT_TOPIC_PRESSING: pressing-stats
+      GROUP_ID: ai-service
+      IN_TOPIC: wyscout-events
+      OUT_TOPIC_PASSING_NETWORK: insights-passing-network
+      OUT_TOPIC_PRESSING: insights-pressing
+      OUT_TOPIC_BALL_LOSSES: insights-ball-losses
+      OUT_TOPIC_LINE_BREAKS: insights-line-breaks
+      OUT_TOPIC_LIFECYCLE: match-lifecycle
       RECOMPUTE_MS: "3000"
       LOG_LEVEL: INFO
     ports:

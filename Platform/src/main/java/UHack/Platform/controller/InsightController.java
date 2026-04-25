@@ -27,30 +27,46 @@ public class InsightController {
         this.matches = matches;
     }
 
-    /** All current live insights for one match, keyed by type. */
+    /**
+     * All current live insights for one match, grouped by type then by team:
+     * {
+     *   "pressing":        { "9001": {payload}, "9010": {payload} },
+     *   "passing-network": { "9001": {payload}, "9010": {payload} },
+     *   ...
+     * }
+     */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> all(@PathVariable Long wyId) {
+    public ResponseEntity<Map<String, Map<String, Object>>> all(@PathVariable Long wyId) {
         return matches.findByWyId(wyId)
                 .map(m -> {
-                    Map<String, Object> out = new HashMap<>();
+                    Map<String, Map<String, Object>> out = new HashMap<>();
                     for (LiveInsight row : insights.listForMatch(m.getId())) {
-                        out.put(toWireType(row.getType()), Map.of(
-                                "computedAt", row.getComputedAt().toString(),
-                                "payload", row.getPayload()
-                        ));
+                        out
+                                .computeIfAbsent(toWireType(row.getType()), k -> new HashMap<>())
+                                .put(String.valueOf(row.getTeamId()), Map.of(
+                                        "computedAt", row.getComputedAt().toString(),
+                                        "payload", row.getPayload()
+                                ));
                     }
                     return ResponseEntity.ok(out);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /** Single insight (e.g. /pressing). */
+    /**
+     * Insight for a specific team. Required:
+     *   GET /api/matches/{wyId}/insights/{type}?team_id=9001
+     */
     @GetMapping("/{type}")
-    public ResponseEntity<JsonNode> one(@PathVariable Long wyId, @PathVariable String type) {
+    public ResponseEntity<JsonNode> one(
+            @PathVariable Long wyId,
+            @PathVariable String type,
+            @RequestParam("team_id") Long teamId
+    ) {
         LiveInsight.Type t = parseType(type);
         if (t == null) return ResponseEntity.badRequest().build();
         return matches.findByWyId(wyId)
-                .flatMap(m -> insights.get(m.getId(), t))
+                .flatMap(m -> insights.get(m.getId(), t, teamId))
                 .map(row -> ResponseEntity.ok(row.getPayload()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
