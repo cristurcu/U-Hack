@@ -3,6 +3,7 @@ package UHack.Platform.consumer;
 import UHack.Platform.domain.AnalysisReport;
 import UHack.Platform.service.AnalysisService;
 import UHack.Platform.service.MatchService;
+import UHack.Platform.service.PostMatchPipelineService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -29,11 +30,16 @@ public class AnalysisReportConsumer {
 
     private final AnalysisService analyses;
     private final MatchService matches;
+    private final PostMatchPipelineService postMatchPipeline;
     private final ObjectMapper mapper;
 
-    public AnalysisReportConsumer(AnalysisService analyses, MatchService matches, ObjectMapper mapper) {
+    public AnalysisReportConsumer(AnalysisService analyses,
+                                  MatchService matches,
+                                  PostMatchPipelineService postMatchPipeline,
+                                  ObjectMapper mapper) {
         this.analyses = analyses;
         this.matches = matches;
+        this.postMatchPipeline = postMatchPipeline;
         this.mapper = mapper;
     }
 
@@ -75,12 +81,7 @@ public class AnalysisReportConsumer {
 
         var match = matches.findOrCreate(wyId);
         analyses.upsert(match.getId(), reportType, payload);
-
-        // If both reports are in, mark match as ANALYSED
-        var stored = analyses.listForMatch(match.getId());
-        if (stored.size() >= 2) {
-            matches.markAnalysed(wyId);
-        }
+        postMatchPipeline.tryRunFusionAndRag(match);
         log.info("stored {} report for match {}", reportType, wyId);
     }
 }

@@ -114,6 +114,30 @@ services:
     ports:
       - "8003:8003"
 
+  tactical-fusion:
+    build: ./tactical-fusion
+    container_name: uhack-tactical-fusion
+    ports:
+      - "8005:8005"
+
+  rag-service:
+    build: ./rag-service
+    container_name: uhack-rag-service
+    environment:
+      APP_ENV: dev
+      VECTOR_STORE: faiss
+      STORAGE_DIR: /app/storage/vector_store
+      EMBEDDING_PROVIDER: sentence_transformers
+      EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      RAG_LLM_PROVIDER: openai
+      RAG_OPENAI_MODEL: gpt-5-mini
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - rag-vector-store:/app/storage/vector_store
+    ports:
+      - "8004:8004"
+
 volumes:
   redis-data:
   postgres-data:
+  rag-vector-store:

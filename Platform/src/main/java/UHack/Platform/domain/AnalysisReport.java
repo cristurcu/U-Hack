@@ -21,7 +21,8 @@ public class AnalysisReport {
 
     public enum Type {
         DECISION_QUALITY,
-        TACTICAL_INTELLIGENCE
+        TACTICAL_INTELLIGENCE,
+        TACTICAL_FUSION
     }
 
     @Id

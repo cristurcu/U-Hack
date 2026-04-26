@@ -57,6 +57,7 @@ public class AnalysisController {
         return switch (wire) {
             case "decision-quality"      -> AnalysisReport.Type.DECISION_QUALITY;
             case "tactical-intelligence" -> AnalysisReport.Type.TACTICAL_INTELLIGENCE;
+            case "tactical-fusion"       -> AnalysisReport.Type.TACTICAL_FUSION;
             default -> null;
         };
     }
@@ -65,6 +66,7 @@ public class AnalysisController {
         return switch (t) {
             case DECISION_QUALITY      -> "decision-quality";
             case TACTICAL_INTELLIGENCE -> "tactical-intelligence";
+            case TACTICAL_FUSION       -> "tactical-fusion";
         };
     }
 }

@@ -9,4 +9,5 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     List<MatchEvent> findByMatchIdOrderByMinuteAscSecondAscIdAsc(Long matchId);
     long countByMatchId(Long matchId);
     boolean existsByWyEventId(Long wyEventId);
+    void deleteByMatchId(Long matchId);
 }

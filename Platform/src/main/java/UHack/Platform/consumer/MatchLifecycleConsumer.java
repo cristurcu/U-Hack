@@ -97,18 +97,22 @@ public class MatchLifecycleConsumer {
 
     /** Decision-Quality input: {match_id, label, home/away_team_id, events:[…]}. */
     private ObjectNode buildDqPayload(Match match) {
-        ObjectNode root = mapper.createObjectNode();
-        root.put("match_id", match.getWyId());
-        root.put("label", match.getLabel());
-        root.put("home_team_id", match.getHomeTeamId());
-        root.put("away_team_id", match.getAwayTeamId());
+        ObjectNode matchData = mapper.createObjectNode();
+        matchData.put("match_id", match.getWyId());
+        matchData.put("label", match.getLabel());
+        matchData.put("home_team_id", match.getHomeTeamId());
+        matchData.put("away_team_id", match.getAwayTeamId());
 
         List<MatchEvent> all = events.findByMatchIdOrderByMinuteAscSecondAscIdAsc(match.getId());
         ArrayNode arr = mapper.createArrayNode();
         for (MatchEvent e : all) {
             if (e.getPayload() != null) arr.add(e.getPayload());
         }
-        root.set("events", arr);
+        matchData.set("events", arr);
+
+        ObjectNode root = mapper.createObjectNode();
+        root.set("match_data", matchData);
+        root.put("match_id", match.getWyId());
         return root;
     }
 
